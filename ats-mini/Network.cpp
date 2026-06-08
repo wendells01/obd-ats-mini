@@ -4,6 +4,7 @@
 #include "Utils.h"
 #include "Menu.h"
 #include "Draw.h"
+#include "BleMode.h"
 
 #include <WiFi.h>
 #include <WiFiMulti.h>
@@ -23,6 +24,8 @@ WiFiMulti wifiMulti;
 //
 static const char *apSSID    = RECEIVER_NAME;
 static const char *apPWD     = 0;       // No password
+static bool obdDemoEnabled = false;
+
 static const int   apChannel = 10;      // WiFi channel number (1..13)
 static const bool  apHideMe  = false;   // TRUE: disable SSID broadcast
 static const int   apClients = 3;       // Maximum simultaneous connected clients
@@ -320,6 +323,12 @@ static bool wifiConnect()
 //
 static void webInit()
 {
+  // Load OBD demo mode preference from NVS
+  prefs.begin("network", true, STORAGE_PARTITION);
+  obdDemoEnabled = prefs.getBool("obddemo", false);
+  prefs.end();
+  BLEObd.enableDemoMode(obdDemoEnabled);
+
   server.on("/", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     request->send(200, "text/html", webRadioPage());
   });
@@ -407,6 +416,11 @@ void webSetConfig(AsyncWebServerRequest *request)
   scrollDirection = request->hasParam("scroll", true)? -1 : 1;
   zoomMenu        = request->hasParam("zoom", true);
   prefsSave |= SAVE_SETTINGS;
+
+  // Save OBD demo mode
+  obdDemoEnabled = request->hasParam("obddemo", true);
+  prefs.putBool("obddemo", obdDemoEnabled);
+  BLEObd.enableDemoMode(obdDemoEnabled);
 
   // Done with the preferences
   prefs.end();
@@ -716,6 +730,11 @@ const String webConfigPage()
     "<TD CLASS='LABEL'>Zoomed Menu</TD>"
     "<TD><INPUT TYPE='CHECKBOX' NAME='zoom' VALUE='on'" +
     (zoomMenu? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>OBD Demo Mode</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='obddemo' VALUE='1'" +
+    (obdDemoEnabled? " CHECKED ":"") + "></TD>"
   "</TR>"
   "<TR><TH COLSPAN=2 CLASS='HEADING'>"
     "<INPUT TYPE='SUBMIT' VALUE='Save'>"

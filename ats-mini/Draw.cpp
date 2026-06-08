@@ -475,6 +475,14 @@ void drawScreen(const char *statusLine1, const char *statusLine2)
     return;
   }
 
+  // OBD screen is a special case
+  if(currentCmd==CMD_OBD)
+  {
+    drawLayoutObd(statusLine1, statusLine2);
+    spr.pushSprite(0, 0);
+    return;
+  }
+
   switch(uiLayoutIdx)
   {
     case UI_SMETER:

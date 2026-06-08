@@ -45,11 +45,13 @@
 #define CMD_BLEMODE    0x2E00 // |
 #define CMD_WIFIMODE   0x2F00 // |
 #define CMD_ABOUT      0x3000 //-+
+#define CMD_OBD        0x3100 //-+
 
 // UI Layouts
 #define UI_DEFAULT  0
 #define UI_SMETER   1
 #define UI_OBD      2
+#define UI_LAYOUT_COUNT 2
 
 // Seek modes
 #define SEEK_DEFAULT  0

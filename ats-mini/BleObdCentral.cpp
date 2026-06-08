@@ -441,6 +441,22 @@ void BleObdCentral::update()
       pollNextPid();
     }
   }
+
+  // Demo mode: generate simulated data
+  if(demoMode_ && !isConnected())
+  {
+    uint32_t now = millis();
+    if(now - lastDemoUpdateMs_ > 250)
+    {
+      lastDemoUpdateMs_ = now;
+      obdData_.rpm = (uint16_t)(2800 + 2000 * sin(now / 5000.0));
+      obdData_.speed = (uint8_t)(60 + 40 * sin(now / 8000.0));
+      obdData_.coolantTemp = (int8_t)(88 + 8 * sin(now / 15000.0));
+      obdData_.engineLoad = (uint8_t)(30 + 25 * sin(now / 5000.0));
+      obdData_.throttlePos = (uint8_t)(25 + 30 * sin(now / 4000.0));
+      obdData_.updated = now;
+    }
+  }
 }
 
 // ------------------------------------------------------------------
@@ -457,6 +473,42 @@ bool BleObdCentral::consumeAbortPending()
   bool pending = abortPending_;
   abortPending_ = false;
   return pending;
+}
+
+void BleObdCentral::enableDemoMode(bool enable)
+{
+  demoMode_ = enable;
+  if(enable)
+  {
+    obdData_.rpm = 1200;
+    obdData_.speed = 60;
+    obdData_.coolantTemp = 87;
+    obdData_.engineLoad = 35;
+    obdData_.intakeTemp = 40;
+    obdData_.throttlePos = 25;
+    obdData_.batteryVoltage = 12.6f;
+    obdData_.fuelLevel = 75;
+    obdData_.timingAdvance = 12;
+    obdData_.mafRate = 450;
+
+    obdData_.rpmValid = true;
+    obdData_.speedValid = true;
+    obdData_.coolantTempValid = true;
+    obdData_.engineLoadValid = true;
+    obdData_.intakeTempValid = true;
+    obdData_.throttlePosValid = true;
+    obdData_.batteryVoltageValid = true;
+    obdData_.fuelLevelValid = true;
+    obdData_.timingAdvanceValid = true;
+    obdData_.mafRateValid = true;
+    obdData_.updated = millis();
+    lastDemoUpdateMs_ = millis();
+  }
+}
+
+bool BleObdCentral::isDemoMode() const
+{
+  return demoMode_;
 }
 
 // ------------------------------------------------------------------

@@ -64,7 +64,10 @@ public:
   bool consumeAbortPending();
 
   const ObdData& obdData() const { return obdData_; }
-  bool isReady() const { return elmState_ == ElmState::Ready; }
+  bool isReady() const { return demoMode_ || elmState_ == ElmState::Ready; }
+
+  void enableDemoMode(bool enable);
+  bool isDemoMode() const;
 
 protected:
   void configureSecurity() override;
@@ -141,6 +144,8 @@ private:
   uint8_t initRetries_ = 0;
   uint32_t lastCmdMs_ = 0;
   uint32_t cmdStartMs_ = 0;
+  bool demoMode_ = false;
+  uint32_t lastDemoUpdateMs_ = 0;
 
   static constexpr const char* initCommands_[] = {
     "ATZ\r", "ATE0\r", "ATL0\r", "ATS0\r", "ATH0\r", "ATSP0\r"

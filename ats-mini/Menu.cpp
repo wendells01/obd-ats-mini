@@ -85,7 +85,8 @@ Band *getCurrentBand() { return(&bands[bandIdx]); }
 #define MENU_AGC_ATT      9
 #define MENU_AVC         10
 #define MENU_SOFTMUTE    11
-#define MENU_SETTINGS    12
+#define MENU_OBD         12
+#define MENU_SETTINGS    13
 
 int8_t menuIdx = MENU_VOLUME;
 
@@ -103,6 +104,7 @@ static const char *menu[] =
   "AGC/ATTN",
   "AVC",
   "SoftMute",
+  "OBD",
   "Settings",
 };
 
@@ -265,7 +267,7 @@ int getTotalUTCOffsets() { return(ITEM_COUNT(utcOffsets)); }
 //
 uint8_t uiLayoutIdx = 0;
 static const char *uiLayoutDesc[] =
-{ "Default", "S-Meter", "OBD" };
+{ "Default", "S-Meter" };
 
 //
 // USB Port Mode Menu
@@ -890,6 +892,14 @@ static void clickMenu(int cmd, bool shortPress)
     case MENU_AVC:
       // No AVC in FM mode
       if(currentMode!=FM) currentCmd = CMD_AVC;
+      break;
+
+    case MENU_OBD:
+      currentCmd = CMD_OBD;
+      if(bleModeIdx != BLE_OBD) {
+        bleModeIdx = BLE_OBD;
+        bleInit(BLE_OBD);
+      }
       break;
 
     case MENU_SCAN:

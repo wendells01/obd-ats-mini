@@ -243,6 +243,10 @@ void setup()
   // If loading bands fails, save default bands
   if(!prefsLoad(SAVE_BANDS|SAVE_VERIFY)) prefsSave(SAVE_BANDS);
 
+  // Clamp UI layout index after removing OBD layout
+  if(uiLayoutIdx >= UI_LAYOUT_COUNT)
+    uiLayoutIdx = UI_DEFAULT;
+
   // Audio Amplifier Enable. G8PTN: Added
   // After the SI4732 has been setup, enable the audio amplifier
   if(PIN_AMP_EN >= 0) digitalWrite(PIN_AMP_EN, HIGH);

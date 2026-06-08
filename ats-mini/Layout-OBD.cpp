@@ -58,7 +58,9 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
   spr.setTextColor(TH.text);
   spr.setTextDatum(TL_DATUM);
 
-  if (!connected)
+  if (BLEObd.isDemoMode())
+    spr.drawString("OBD: demo", 5, 2, 2);
+  else if (!connected)
     spr.drawString("OBD: scanning...", 5, 2, 2);
   else if (!ready)
     spr.drawString("OBD: initializing ELM327...", 5, 2, 2);
@@ -71,7 +73,17 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
   // ── Divider line ──────────────────────────────────────
   spr.drawFastHLine(0, 18, 320, TH.scale_line);
 
-  if (!connected || !ready) return;
+  if ((!connected || !ready) && !BLEObd.isDemoMode())
+  {
+    spr.setTextColor(TH.text_muted);
+    spr.setTextDatum(TC_DATUM);
+    spr.drawString(!connected ?
+      "OBD not active - Settings -> Bluetooth -> OBD" :
+      "Initializing ELM327...", 160, 75, 2);
+    spr.setTextDatum(TL_DATUM);
+    spr.drawString("Click to exit", 5, 150, 2);
+    return;
+  }
 
   // ── RPM (large, centred) ──────────────────────────────
   spr.setFreeFont(&Orbitron_Light_24);
@@ -169,4 +181,9 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
       spr.drawString(tmp, 160, 105, 2);
     }
   }
+
+  // ── Help text ─────────────────────────────────────────
+  spr.setTextColor(TH.text_muted);
+  spr.setTextDatum(TL_DATUM);
+  spr.drawString("Click to exit", 5, 150, 2);
 }
