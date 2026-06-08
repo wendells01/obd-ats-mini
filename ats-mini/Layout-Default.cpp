@@ -14,7 +14,7 @@ void drawLayoutDefault(const char *statusLine1, const char *statusLine2)
   drawBleIndicator(BLE_OFFSET_X, BLE_OFFSET_Y);
 
   // Draw OBD indicator
-  drawObdIndicator(116, 0);
+  drawObdIndicator(190, 0);
 
   // Draw battery indicator & voltage
   bool has_voltage = drawBattery(BATT_OFFSET_X, BATT_OFFSET_Y);
