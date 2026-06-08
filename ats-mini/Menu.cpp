@@ -265,7 +265,7 @@ int getTotalUTCOffsets() { return(ITEM_COUNT(utcOffsets)); }
 //
 uint8_t uiLayoutIdx = 0;
 static const char *uiLayoutDesc[] =
-{ "Default", "S-Meter" };
+{ "Default", "S-Meter", "OBD" };
 
 //
 // USB Port Mode Menu
@@ -283,7 +283,7 @@ int getTotalUSBModes() { return(ITEM_COUNT(usbModeDesc)); }
 
 uint8_t bleModeIdx = BLE_OFF;
 static const char *bleModeDesc[] =
-{ "Off", "Ad hoc", "HID" };
+{ "Off", "Ad hoc", "HID", "OBD" };
 
 int getTotalBleModes() { return(ITEM_COUNT(bleModeDesc)); }
 

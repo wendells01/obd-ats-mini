@@ -7,6 +7,7 @@
 
 static BleUartPeripheral BLESerial;
 static BleHidCentral BLEHid;
+BleObdCentral BLEObd;
 static RemoteState remoteBLEState;
 
 //
@@ -21,6 +22,9 @@ int8_t getBleStatus()
   if (BLEHid.isStarted())
     return BLEHid.isConnected() ? 1 : -1;
 
+  if (BLEObd.isStarted())
+    return BLEObd.isConnected() ? 1 : -1;
+
   return 0;
 }
 
@@ -34,6 +38,9 @@ void bleStop()
 
   if (BLEHid.isStarted())
     BLEHid.end();
+
+  if (BLEObd.isStarted())
+    BLEObd.end();
 }
 
 void bleInit(uint8_t bleMode)
@@ -48,6 +55,9 @@ void bleInit(uint8_t bleMode)
     case BLE_HID:
       BLEHid.begin(RECEIVER_NAME);
       break;
+    case BLE_OBD:
+      BLEObd.begin(RECEIVER_NAME);
+      break;
   }
 }
 
@@ -61,6 +71,13 @@ int bleLoop(uint8_t bleMode)
     if (BLESerial.available())
       return remoteDoCommand(&BLESerial, &remoteBLEState, BLESerial.read());
     return 0;
+  }
+
+  if (bleMode == BLE_OBD)
+  {
+    BLEObd.loop();
+    BLEObd.update();
+    return BLEObd.isConnected() ? REMOTE_CHANGED : 0;
   }
 
   if (bleMode != BLE_HID)
@@ -100,6 +117,9 @@ bool bleConsumeAbortPending(uint8_t bleMode)
 
   if (bleMode == BLE_HID)
     return BLEHid.consumeAbortPending();
+
+  if (bleMode == BLE_OBD)
+    return BLEObd.consumeAbortPending();
 
   return false;
 }

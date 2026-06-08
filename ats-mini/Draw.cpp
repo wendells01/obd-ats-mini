@@ -425,6 +425,40 @@ void drawScanGraphs(uint32_t freq)
 }
 
 //
+// Draw OBD indicator
+//
+void drawObdIndicator(int x, int y)
+{
+  bool obdStarted = BLEObd.isStarted();
+
+  if(obdStarted || switchThemeEditor())
+  {
+    uint16_t color = BLEObd.isConnected() ? TH.rf_icon_conn : TH.rf_icon;
+    bool ready = BLEObd.isReady();
+
+    if(switchThemeEditor())
+      color = millis()&0x2000 ? TH.rf_icon_conn : TH.rf_icon;
+
+    // Draw "OBD" text
+    spr.setTextColor(color);
+    spr.setTextDatum(TL_DATUM);
+    spr.drawString("OBD", x, y, 1);
+
+    // Draw a small dot indicator next to the text
+    if(ready)
+    {
+      spr.fillCircle(x + 24, y + 4, 2, color);
+    }
+    else if(obdStarted)
+    {
+      // Blinking dot when connecting
+      if(millis() & 0x400)
+        spr.fillCircle(x + 24, y + 4, 2, color);
+    }
+  }
+}
+
+//
 // Draw screen according to given command
 //
 void drawScreen(const char *statusLine1, const char *statusLine2)
@@ -445,6 +479,9 @@ void drawScreen(const char *statusLine1, const char *statusLine2)
   {
     case UI_SMETER:
       drawLayoutSmeter(statusLine1, statusLine2);
+      break;
+    case UI_OBD:
+      drawLayoutObd(statusLine1, statusLine2);
       break;
     default:
       drawLayoutDefault(statusLine1, statusLine2);

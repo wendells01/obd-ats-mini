@@ -52,6 +52,8 @@ void drawScale(uint32_t freq);
 
 void drawLayoutDefault(const char *statusLine1, const char *statusLine2);
 void drawLayoutSmeter(const char *statusLine1, const char *statusLine2);
+void drawLayoutObd(const char *statusLine1, const char *statusLine2);
+void drawObdIndicator(int x, int y);
 
 void drawAbout();
 void drawAboutHelp(uint8_t arrow);

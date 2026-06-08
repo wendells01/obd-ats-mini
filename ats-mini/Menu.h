@@ -49,6 +49,7 @@
 // UI Layouts
 #define UI_DEFAULT  0
 #define UI_SMETER   1
+#define UI_OBD      2
 
 // Seek modes
 #define SEEK_DEFAULT  0

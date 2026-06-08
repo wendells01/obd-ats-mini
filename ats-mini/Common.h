@@ -98,6 +98,7 @@
 #define BLE_OFF        0 // Bluetooth is disabled
 #define BLE_ADHOC      1 // Ad hoc BLE serial protocol
 #define BLE_HID        2 // BLE HID central
+#define BLE_OBD        3 // OBD-II BLE central
 
 // USB modes
 #define USB_OFF        0 // USB is disabled

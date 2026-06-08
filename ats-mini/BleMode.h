@@ -3,6 +3,9 @@
 
 #include "Remote.h"
 #include "BleUartPeripheral.h"
+#include "BleObdCentral.h"
+
+extern BleObdCentral BLEObd;
 
 void bleInit(uint8_t bleMode);
 void bleStop();

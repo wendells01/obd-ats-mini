@@ -3,6 +3,7 @@
 #include "Utils.h"
 #include "Menu.h"
 #include "Draw.h"
+#include "BleMode.h"
 
 void drawLayoutDefault(const char *statusLine1, const char *statusLine2)
 {
@@ -11,6 +12,9 @@ void drawLayoutDefault(const char *statusLine1, const char *statusLine2)
 
   // Draw BLE icon
   drawBleIndicator(BLE_OFFSET_X, BLE_OFFSET_Y);
+
+  // Draw OBD indicator
+  drawObdIndicator(116, 0);
 
   // Draw battery indicator & voltage
   bool has_voltage = drawBattery(BATT_OFFSET_X, BATT_OFFSET_Y);
@@ -70,5 +74,16 @@ void drawLayoutDefault(const char *statusLine1, const char *statusLine2)
       drawRadioText(STATUS_OFFSET_Y, STATUS_OFFSET_Y + 25);
     else
       drawScale(isSSB()? (currentFrequency + currentBFO/1000) : currentFrequency);
+  }
+
+  // Draw mini OBD widget when connected
+  if(BLEObd.isStarted() && BLEObd.isReady())
+  {
+    const ObdData& d = BLEObd.obdData();
+    char buf[24];
+    snprintf(buf, sizeof(buf), "RPM: %u", d.rpm);
+    spr.setTextColor(TH.text_muted);
+    spr.setTextDatum(TL_DATUM);
+    spr.drawString(buf, 5, 135, 2);
   }
 }
