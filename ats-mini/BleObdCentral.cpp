@@ -104,11 +104,7 @@ bool BleObdCentral::setupConnectedPeer()
 
   // Subscribe to notifications
   activeInstance_ = this;
-  if (!txChar->registerForNotify(notifyCallback, true))
-  {
-    activeInstance_ = nullptr;
-    return false;
-  }
+  txChar->registerForNotify(notifyCallback, true);
 
   txChar_ = txChar;
   rxChar_ = rxChar;
@@ -224,13 +220,6 @@ void BleObdCentral::sendNextCommand(const char* cmd)
 // ------------------------------------------------------------------
 // ELM327 initialisation
 // ------------------------------------------------------------------
-
-void BleObdCentral::beginInitSequence()
-{
-  elmState_ = ElmState::InitATZ;
-  initStep_ = 0;
-  initRetries_ = 0;
-}
 
 void BleObdCentral::advanceInit()
 {
