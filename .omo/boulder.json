@@ -1,46 +1,9 @@
 {
-  "active_plan": "/home/ubuntu/ats-mini/.omo/plans/obd2-implementation-plan.md",
-  "started_at": "2026-06-08T14:59:00.000Z",
-  "session_ids": [
-    "opencode:ses_1585aa332ffeAhonpPqD5ERytj",
-    "opencode:ses_1583481c7ffev0uLqwmgwmWOBw",
-    "opencode:ses_158346c96ffe8l2E7smRim8uTV"
-  ],
-  "plan_name": "obd2-implementation-plan",
-  "current_phase": 1,
-  "session_origins": {
-    "opencode:ses_1585aa332ffeAhonpPqD5ERytj": "direct",
-    "opencode:ses_1583481c7ffev0uLqwmgwmWOBw": "appended",
-    "opencode:ses_158346c96ffe8l2E7smRim8uTV": "appended"
-  },
-  "task_sessions": {},
+  "active_plan": "/home/ubuntu/ats-mini/.omo/plans/obd-dashboard-redesign.md",
+  "started_at": "2026-06-08T22:42:37.029Z",
+  "session_ids": ["opencode:ses_156e30432ffeiCnUtcBMgzXUIK"],
+  "plan_name": "obd-dashboard-redesign",
   "schema_version": 2,
-  "works": {
-    "obd2-implementation-plan-legacy": {
-      "work_id": "obd2-implementation-plan-legacy",
-      "active_plan": "/home/ubuntu/ats-mini/.omo/plans/obd2-implementation-plan.md",
-      "plan_name": "obd2-implementation-plan",
-      "started_at": "2026-06-08T14:59:00.000Z",
-      "updated_at": "2026-06-08T15:52:32.542Z",
-      "session_ids": [
-        "opencode:ses_1585aa332ffeAhonpPqD5ERytj",
-        "opencode:ses_1583481c7ffev0uLqwmgwmWOBw",
-        "opencode:ses_158346c96ffe8l2E7smRim8uTV"
-      ],
-      "session_origins": {
-        "opencode:ses_1585aa332ffeAhonpPqD5ERytj": "direct",
-        "opencode:ses_1583481c7ffev0uLqwmgwmWOBw": "appended",
-        "opencode:ses_158346c96ffe8l2E7smRim8uTV": "appended"
-      },
-      "task_sessions": {},
-      "ended_at": "2026-06-08T15:52:32.539Z",
-      "elapsed_ms": 3212539,
-      "status": "completed"
-    }
-  },
-  "active_work_id": "obd2-implementation-plan-legacy",
-  "updated_at": "2026-06-08T15:52:32.542Z",
-  "status": "completed",
-  "ended_at": "2026-06-08T15:52:32.539Z",
-  "elapsed_ms": 3212539
+  "status": "active",
+  "works": {}
 }

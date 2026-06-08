@@ -3,43 +3,287 @@
 #include "Menu.h"
 #include "Draw.h"
 #include "BleMode.h"
+#include <math.h>
 
 // ─────────────────────────────────────────────────────────
-// Draw a labelled progress bar
+// Right-side OBD data panel — 6 PID indicators
 // ─────────────────────────────────────────────────────────
-static void drawObdBar(int x, int y, int w, int h, const char* label,
-                        uint8_t percent, const char* value)
+static void drawObdPanel(int x, int y, int w, const ObdData& d)
 {
-  // Label
-  spr.setTextColor(TH.text);
-  spr.setTextDatum(TL_DATUM);
-  spr.drawString(label, x, y, 2);
+  const uint16_t GRAY = spr.color565(120, 120, 120);
 
-  // Bar background
-  int barX  = x + 65;
-  int barY  = y + 2;
-  int barW  = w - 65 - 50;  // remaining width for bar
-  int barH  = h - 4;
-
-  if (barW > 4)
+  // ── Row 0: SPEED (large, centred) ──────────────────
   {
-    spr.drawRect(barX, barY, barW, barH, TH.smeter_bar_empty);
+    spr.setFreeFont(&Orbitron_Light_24);
+    spr.setTextColor(d.speedValid ? TH.freq_text : GRAY);
+    spr.setTextDatum(TC_DATUM);
+    char buf[12];
+    if (d.speedValid)
+      snprintf(buf, sizeof(buf), "%u", d.speed);
+    else
+      snprintf(buf, sizeof(buf), "--");
+    spr.drawString(buf, x + w / 2, y, 4);
 
-    uint16_t fillColor = TH.smeter_bar;
-    if (percent > 85)
-      fillColor = TH.text_warn;  // red for near‑limit
-    else if (percent > 60)
-      fillColor = TH.smeter_bar_plus;  // yellow for mid‑high
-
-    int fillW = (int)((uint16_t)barW * percent / 100);
-    if (fillW > 0)
-      spr.fillRect(barX + 1, barY + 1, fillW, barH - 2, fillColor);
+    spr.setFreeFont(NULL);
+    spr.setTextColor(TH.text_muted);
+    spr.setTextDatum(TC_DATUM);
+    spr.drawString("km/h", x + w / 2, y + 26, 2);
   }
 
-  // Value text
-  spr.setTextColor(TH.text);
-  spr.setTextDatum(TL_DATUM);
-  spr.drawString(value, x + w - 46, y, 2);
+  // ── Helper: status → fill colour ──────────────────
+  auto dotFill = [&](int status) -> uint16_t {
+    switch (status) {
+      case 0:  return TH.smeter_bar;       // green
+      case 1:  return TH.smeter_bar_plus;   // yellow
+      case 2:  return TH.text_warn;         // red
+      default: return GRAY;
+    }
+  };
+
+  // ── Draw a 6px status dot ────────────────────────
+  auto drawDot = [&](int dx, int dy, uint16_t col) {
+    spr.fillCircle(dx, dy, 3, col);
+  };
+
+  // ── Draw a mini progress bar ─────────────────────
+  auto drawMiniBar = [&](int bx, int by, int bw, int bh,
+                          uint8_t pct, uint16_t col) {
+    spr.drawRect(bx, by, bw, bh, TH.text_muted);
+    if (pct > 0) {
+      int fillW = (bw - 2) * pct / 100;
+      if (fillW > 0)
+        spr.fillRect(bx + 1, by + 1, fillW, bh - 2, col);
+    }
+  };
+
+  // ── Draw one data row (dot + label + value + bar) ─
+  auto drawRow = [&](int ry, const char* label, const char* val,
+                     bool valid, int status, int barPct, bool showBar) {
+    uint16_t fg   = valid ? TH.text : GRAY;
+    uint16_t dcol = valid ? dotFill(status) : GRAY;
+
+    // Status dot (6px diameter, centred in 22px row)
+    drawDot(x + 4, ry + 11, dcol);
+
+    spr.setTextColor(fg);
+    spr.setTextDatum(TL_DATUM);
+    spr.drawString(label, x + 10, ry + 2, 2);
+
+    spr.drawString(val, x + 52, ry + 2, 2);
+
+    if (showBar && valid) {
+      int bw = w - 96;  // ends at x+w-6 (6px right margin)
+      if (bw > 10)
+        drawMiniBar(x + 90, ry + 7, bw, 8, barPct, dcol);
+    }
+  };
+
+  // ── Status helpers ───────────────────────────────
+  // Returns 0=green, 1=yellow, 2=red
+  auto coolantStatus = [](int16_t v) -> int {
+    if (v > 105) return 2;
+    if (v > 95)  return 1;
+    return 0;
+  };
+  auto loadStatus = [](uint8_t v) -> int {
+    if (v > 85) return 2;
+    if (v > 60) return 1;
+    return 0;
+  };
+  auto battStatus = [](float v) -> int {
+    if (v < 11.0f || v > 15.0f) return 2;
+    if (v < 12.0f || v > 14.5f) return 1;
+    return 0;
+  };
+  auto throttleStatus = [](uint8_t v) -> int {
+    if (v > 70) return 2;
+    if (v > 30) return 1;
+    return 0;
+  };
+  auto intakeStatus = [](int16_t v) -> int {
+    if (v > 60) return 2;
+    if (v > 40) return 1;
+    return 0;
+  };
+
+  // ── Bar-percentage helpers ───────────────────────
+  auto coolantPct = [](int16_t v) -> uint8_t {
+    if (v <= 40) return 0;
+    if (v >= 130) return 100;
+    return (uint8_t)((v - 40) * 100 / 90);
+  };
+  auto battPct = [](float v) -> uint8_t {
+    if (v <= 10.0f) return 0;
+    if (v >= 16.0f) return 100;
+    return (uint8_t)((v - 10.0f) * 100 / 6.0f);
+  };
+  auto intakePct = [](int16_t v) -> uint8_t {
+    if (v <= 0) return 0;
+    if (v >= 80) return 100;
+    return (uint8_t)(v * 100 / 80);
+  };
+
+  // ── Data rows ───────────────────────────────────
+  char buf[16];
+
+  // Row 1 (y=50) — Coolant Temp
+  {
+    bool ok = d.coolantTempValid;
+    snprintf(buf, sizeof(buf), ok ? "%d C" : "--", d.coolantTemp);
+    drawRow(50, "Cool", buf, ok,
+            ok ? coolantStatus(d.coolantTemp) : 2,
+            ok ? coolantPct(d.coolantTemp) : 0, true);
+  }
+
+  // Row 2 (y=72) — Engine Load
+  {
+    bool ok = d.engineLoadValid;
+    snprintf(buf, sizeof(buf), ok ? "%u %%" : "--", d.engineLoad);
+    drawRow(72, "Load", buf, ok,
+            ok ? loadStatus(d.engineLoad) : 2,
+            ok ? d.engineLoad : 0, true);
+  }
+
+  // Row 3 (y=94) — Battery Voltage
+  {
+    bool ok = d.batteryVoltageValid;
+    snprintf(buf, sizeof(buf), ok ? "%.1fV" : "--", d.batteryVoltage);
+    drawRow(94, "Batt", buf, ok,
+            ok ? battStatus(d.batteryVoltage) : 2,
+            ok ? battPct(d.batteryVoltage) : 0, true);
+  }
+
+  // Row 4 (y=116) — Throttle Position
+  {
+    bool ok = d.throttlePosValid;
+    snprintf(buf, sizeof(buf), ok ? "%u %%" : "--", d.throttlePos);
+    drawRow(116, "Throt", buf, ok,
+            ok ? throttleStatus(d.throttlePos) : 2,
+            ok ? d.throttlePos : 0, true);
+  }
+
+  // Row 5 (y=138) — Intake Temp (no mini bar)
+  {
+    bool ok = d.intakeTempValid;
+    snprintf(buf, sizeof(buf), ok ? "%d C" : "--", d.intakeTemp);
+    drawRow(138, "Intake", buf, ok,
+            ok ? intakeStatus(d.intakeTemp) : 2,
+            ok ? intakePct(d.intakeTemp) : 0, false);
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// Tachometer arc gauge (drawSmoothArc + fillTriangle needle)
+// ─────────────────────────────────────────────────────────
+static void drawObdGauge(int cx, int cy, int outerR, int innerR, uint16_t rpm)
+{
+  if (rpm > OBD_MAX_RPM) rpm = OBD_MAX_RPM;
+
+  //
+  // Arc track + colored zones
+  //
+  // TFT_eSPI angles: 0° = 3 o'clock, clockwise
+  // RPM → angle: 0→135° (bottom-left), 4000→270° (top), 8000→405°/45° (bottom-right)
+  // Green  135°–270° =  0–4000 RPM
+  // Yellow 270°–360° = 4000–6000 RPM
+  // Red    360°–405° = 6000–8000 RPM
+  //
+  spr.drawSmoothArc(cx, cy, outerR, innerR, 135, 405, TH.smeter_bar_empty, TH.bg);
+  spr.drawSmoothArc(cx, cy, outerR, innerR, 135, 270, TH.smeter_bar, TH.smeter_bar_empty);
+  spr.drawSmoothArc(cx, cy, outerR, innerR, 270, 360, TH.smeter_bar_plus, TH.smeter_bar_empty);
+  spr.drawSmoothArc(cx, cy, outerR, innerR, 360, 405, TH.text_warn, TH.smeter_bar_empty);
+
+  //
+  // Tick marks at every 1000 RPM
+  //
+  for (unsigned int r = 0; r <= 7000; r += 1000)
+  {
+    int  angle = 135 + (int)(r * 270u / OBD_MAX_RPM);
+    float rad  = angle * (PI / 180.0f);
+    float c    = cosf(rad);
+    float s    = sinf(rad);
+    int x1 = cx + (int)((outerR - 8) * c);
+    int y1 = cy + (int)((outerR - 8) * s);
+    int x2 = cx + (int)((outerR - 1) * c);
+    int y2 = cy + (int)((outerR - 1) * s);
+    spr.drawLine(x1, y1, x2, y2, TH.text);
+  }
+
+  //
+  // SHIFT progression bars (top of gauge)
+  //
+  int numBars = 0;
+  if (rpm > 5000) numBars = 1;
+  if (rpm > 5300) numBars = 2;
+  if (rpm > 5600) numBars = 3;
+  if (rpm > 5900) numBars = 4;
+
+  const int barW = 8, barH = 5, barGap = 3;
+  int totalW     = 4 * barW + 3 * barGap;
+  int barY       = cy - outerR - 7;
+  int barStartX  = cx - totalW / 2;
+
+  for (int i = 0; i < 4; i++)
+  {
+    int bx       = barStartX + i * (barW + barGap);
+    uint16_t col = (i < numBars) ? TH.text_warn : TH.smeter_bar_empty;
+    spr.fillRect(bx, barY, barW, barH, col);
+  }
+
+  //
+  // Needle (fillTriangle)
+  //
+  float ndlAngle = 135.0f + (rpm * 270.0f) / OBD_MAX_RPM;
+  float rad_     = ndlAngle * (PI / 180.0f);
+  float ndlC     = cosf(rad_);
+  float ndlS     = sinf(rad_);
+
+  // Tip near outer arc edge
+  int tipX = cx + (int)((outerR - 3) * ndlC);
+  int tipY = cy + (int)((outerR - 3) * ndlS);
+
+  // Base: extends from center along needle direction with width
+  int bCx = cx + (int)(10 * ndlC);
+  int bCy = cy + (int)(10 * ndlS);
+
+  float perpC = cosf(rad_ + PI / 2.0f);
+  float perpS = sinf(rad_ + PI / 2.0f);
+  int bHalfW  = 5;
+
+  spr.fillTriangle(tipX, tipY,
+                   bCx + (int)(bHalfW * perpC), bCy + (int)(bHalfW * perpS),
+                   bCx - (int)(bHalfW * perpC), bCy - (int)(bHalfW * perpS),
+                   TH.freq_text);
+  // Pivot dot
+  spr.fillCircle(cx, cy, 4, TH.freq_text);
+
+  //
+  // Center RPM number
+  //
+  spr.setFreeFont(&Orbitron_Light_24);
+  spr.setTextColor(TH.freq_text);
+  spr.setTextDatum(TC_DATUM);
+
+  char rpmStr[8];
+  snprintf(rpmStr, sizeof(rpmStr), "%u", rpm);
+  spr.drawString(rpmStr, cx, cy - 6, 4);
+
+  spr.setFreeFont(NULL);
+  spr.setTextColor(TH.text_muted);
+  spr.setTextDatum(TC_DATUM);
+  spr.drawString("RPM", cx, cy + 20, 2);
+
+  //
+  // SHIFT! blinking overlay
+  //
+  if (rpm >= SHIFT_RPM_LIMIT && ((millis() / 500) & 1))
+  {
+    spr.setFreeFont(&Orbitron_Light_24);
+    spr.setTextColor(TH.text_warn);
+    spr.setTextDatum(TC_DATUM);
+    spr.drawString("SHIFT!", cx, cy + 42, 4);
+    spr.setFreeFont(NULL);
+  }
 }
 
 // ─────────────────────────────────────────────────────────
@@ -67,9 +311,6 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
   else
     spr.drawString("OBD: connected", 5, 2, 2);
 
-  spr.setTextColor(TH.text_muted);
-  spr.drawString("RPM", 280, 2, 2);
-
   // ── Divider line ──────────────────────────────────────
   spr.drawFastHLine(0, 18, 320, TH.scale_line);
 
@@ -85,102 +326,9 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
     return;
   }
 
-  // ── RPM (large, centred) ──────────────────────────────
-  spr.setFreeFont(&Orbitron_Light_24);
-  spr.setTextColor(TH.freq_text);
-  spr.setTextDatum(TC_DATUM);
-
-  char rpmStr[12];
-  snprintf(rpmStr, sizeof(rpmStr), "%u", d.rpm);
-  spr.drawString(rpmStr, 160, 24, 4);
-
-  spr.setTextDatum(TC_DATUM);
-  spr.setTextColor(TH.text_muted);
-  spr.drawString("RPM", 160, 58, 2);
-
-  // ── Data rows ─────────────────────────────────────────
-  // Two columns:        column 1            column 2
-  // Row 0:     Speed           (y=75)     Coolant Temp      (y=75)
-  // Row 1:     Engine Load     (y=100)    Throttle Position (y=100)
-  // Row 2:     Intake Temp     (y=125)    Battery Voltage   (y=125)
-
-  int colW = 155;  // width per column
-
-  // Column 1
-  {
-    char buf[16];
-
-    // Speed
-    snprintf(buf, sizeof(buf), "%u km/h", d.speed);
-    drawObdBar(5, 75, colW, 20, "Speed",
-               d.speedValid ? (d.speed * 100 / 200) : 0,
-               d.speedValid ? buf : "--");
-
-    // Engine Load
-    snprintf(buf, sizeof(buf), "%u %%", d.engineLoad);
-    drawObdBar(5, 100, colW, 20, "Load",
-               d.engineLoadValid ? d.engineLoad : 0,
-               d.engineLoadValid ? buf : "--");
-
-    // Intake Temp
-    snprintf(buf, sizeof(buf), "%d C", d.intakeTemp);
-    drawObdBar(5, 125, colW, 20, "Intake",
-               d.intakeTempValid ? (uint8_t)((d.intakeTemp + 40) * 100 / 80) : 0,
-               d.intakeTempValid ? buf : "--");
-  }
-
-  // Column 2
-  {
-    char buf[16];
-
-    // Coolant Temp
-    snprintf(buf, sizeof(buf), "%d C", d.coolantTemp);
-    uint8_t pct = d.coolantTempValid
-                    ? (uint8_t)((d.coolantTemp + 40) * 100 / 160) : 0;
-    drawObdBar(165, 75, colW, 20, "Coolant", pct,
-               d.coolantTempValid ? buf : "--");
-
-    // Throttle Position
-    snprintf(buf, sizeof(buf), "%u %%", d.throttlePos);
-    drawObdBar(165, 100, colW, 20, "Throttle",
-               d.throttlePosValid ? d.throttlePos : 0,
-               d.throttlePosValid ? buf : "--");
-
-    // Battery Voltage
-    snprintf(buf, sizeof(buf), "%.1f V", (double)d.batteryVoltage);
-    uint8_t battPct = d.batteryVoltageValid
-                        ? (uint8_t)((d.batteryVoltage - 10.0f) * 100 / 6.0f)
-                        : 0;
-    drawObdBar(165, 125, colW, 20, "Battery", battPct,
-               d.batteryVoltageValid ? buf : "--");
-  }
-
-  // ── Temperature alert overlay (coolant > 100°C) ─────
-  {
-    static bool alertActive = false;
-
-    // Hysteresis: activate at >100°C, clear at <95°C
-    if (d.coolantTempValid && d.coolantTemp > 100)
-      alertActive = true;
-    else if (d.coolantTemp < 95)
-      alertActive = false;
-
-    // Blink overlay at 500ms interval
-    if (alertActive && ((millis() / 500) & 1))
-    {
-      spr.fillRect(50, 55, 220, 60, TH.text_warn);
-
-      spr.setFreeFont(&Orbitron_Light_24);
-      spr.setTextColor(TFT_WHITE);
-      spr.setTextDatum(TC_DATUM);
-      spr.drawString("TEMP!", 160, 78, 4);
-
-      spr.setFreeFont(NULL);
-      char tmp[16];
-      snprintf(tmp, sizeof(tmp), "%d C", d.coolantTemp);
-      spr.drawString(tmp, 160, 105, 2);
-    }
-  }
+  // ── Gauge + panel ─────────────────────────────────────
+  drawObdGauge(82, 95, 65, 50, d.rpm);
+  drawObdPanel(170, 22, 145, d);
 
   // ── Help text ─────────────────────────────────────────
   spr.setTextColor(TH.text_muted);

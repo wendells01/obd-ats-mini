@@ -47,6 +47,10 @@
 #define CMD_ABOUT      0x3000 //-+
 #define CMD_OBD        0x3100 //-+
 
+// OBD Dashboard
+#define OBD_MAX_RPM     8000   // Max RPM for gauge arc top
+#define SHIFT_RPM_LIMIT 6000   // RPM threshold for SHIFT! indicator
+
 // UI Layouts
 #define UI_DEFAULT  0
 #define UI_SMETER   1
