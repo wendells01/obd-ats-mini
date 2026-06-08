@@ -453,7 +453,7 @@ void BleObdCentral::update()
       obdData_.speed = (uint8_t)(60 + 40 * sin(now / 8000.0));
       obdData_.coolantTemp = (int8_t)(88 + 8 * sin(now / 15000.0));
       obdData_.engineLoad = (uint8_t)(30 + 25 * sin(now / 5000.0));
-      obdData_.throttlePos = (uint8_t)(25 + 30 * sin(now / 4000.0));
+      { int t = 25 + 30 * sin(now / 4000.0); obdData_.throttlePos = (uint8_t)(t < 0 ? 0 : t > 255 ? 255 : t); }
       obdData_.updated = now;
     }
   }

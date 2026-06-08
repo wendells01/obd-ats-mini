@@ -418,7 +418,7 @@ void webSetConfig(AsyncWebServerRequest *request)
   prefsSave |= SAVE_SETTINGS;
 
   // Save OBD demo mode
-  obdDemoEnabled = request->hasParam("obddemo", true);
+  obdDemoEnabled = request->hasParam("obddemo", true) && request->getParam("obddemo", true)->value() == "1";
   prefs.putBool("obddemo", obdDemoEnabled);
   BLEObd.enableDemoMode(obdDemoEnabled);
 
