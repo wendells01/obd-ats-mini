@@ -281,18 +281,6 @@ static void drawObdGauge(int cx, int cy, int outerR, int innerR, uint16_t rpm)
   spr.fillCircle(cx, cy, 4, TH.freq_text);
 
   //
-  // SHIFT! blinking overlay
-  //
-  if (rpm >= SHIFT_RPM_LIMIT && ((millis() / 500) & 1))
-  {
-    spr.setFreeFont(&Orbitron_Light_24);
-    spr.setTextColor(TH.text_warn);
-    spr.setTextDatum(TC_DATUM);
-    spr.drawString("SHIFT!", cx, cy + 42, 4);
-    spr.setFreeFont(NULL);
-  }
-
-  //
   // Center RPM number (drawn last so it's always on top of needle)
   //
   spr.setFreeFont(&Orbitron_Light_24);
@@ -356,4 +344,15 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
   drawObdGauge(82, 95, 65, 50, d.rpm);
   drawObdPanel(170, 22, 145, d);
 
+  // ── Full-screen SHIFT! overlay (FuelTech-style) ───────
+  // Blinks at 500ms intervals when RPM exceeds limit.
+  if (d.rpm >= SHIFT_RPM_LIMIT && ((millis() / 500) & 1))
+  {
+    spr.fillRect(0, 19, 320, 151, TFT_YELLOW);
+    spr.setFreeFont(&Orbitron_Light_24);
+    spr.setTextColor(TFT_RED);
+    spr.setTextDatum(CC_DATUM);
+    spr.drawString("SHIFT!", 160, 95, 4);
+    spr.setFreeFont(NULL);
+  }
 }

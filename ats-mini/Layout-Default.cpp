@@ -76,8 +76,8 @@ void drawLayoutDefault(const char *statusLine1, const char *statusLine2)
       drawScale(isSSB()? (currentFrequency + currentBFO/1000) : currentFrequency);
   }
 
-  // Draw mini OBD widget when connected
-  if(BLEObd.isStarted() && BLEObd.isReady())
+  // Draw mini OBD widget when connected to a real ELM327 (not in demo mode)
+  if(BLEObd.isStarted() && BLEObd.isReady() && !BLEObd.isDemoMode())
   {
     const ObdData& d = BLEObd.obdData();
     char buf[24];
