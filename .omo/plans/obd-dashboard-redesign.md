@@ -138,7 +138,7 @@ Wave FINAL (Parallel verification, then user ok):
 
 ## TODOs
 
-- [ ] 1. Fix OBD indicator coordinate overlap
+- [x] 1. Fix OBD indicator coordinate overlap
 
   **What to do**:
   - Change `drawObdIndicator` x-coordinate from `116` to `190` in both layout files
@@ -193,7 +193,7 @@ Wave FINAL (Parallel verification, then user ok):
 
 ---
 
-- [ ] 2. Build RPM arc gauge
+- [x] 2. Build RPM arc gauge
 
   **What to do**:
   - Create a static helper function `drawObdGauge(int x, int y, int r, uint16_t rpm)` in `Layout-OBD.cpp`
@@ -251,7 +251,7 @@ Wave FINAL (Parallel verification, then user ok):
 
 ---
 
-- [ ] 3. Build data panel with visual indicators
+- [x] 3. Build data panel with visual indicators
 
   **What to do**:
   - Create a static helper function `drawObdPanel(int x, int y, const ObdData& d)` in `Layout-OBD.cpp`
@@ -309,7 +309,7 @@ Wave FINAL (Parallel verification, then user ok):
 
 ---
 
-- [ ] 4. Implement SHIFT! shift-light
+- [x] 4. Implement SHIFT! shift-light
 
   **What to do**:
   - Add `#define SHIFT_RPM_LIMIT 6000` in `Menu.h` (near the command defines)
@@ -362,7 +362,7 @@ Wave FINAL (Parallel verification, then user ok):
 
 ---
 
-- [ ] 5. Polish states + wire into drawLayoutObd
+- [x] 5. Polish states + wire into drawLayoutObd
 
   **What to do**:
   - Rewrite `drawLayoutObd()` to call the new gauge + panel functions
@@ -434,19 +434,19 @@ Wave FINAL (Parallel verification, then user ok):
 
 ## Final Verification Wave
 
-- [ ] F1. **Plan Compliance Audit** — `oracle`
+- [x] F1. **Plan Compliance Audit** — `oracle`
   Read the plan end-to-end. For each "Must Have": verify implementation exists (read file, check function signatures). For each "Must NOT Have": search codebase for forbidden patterns. Check evidence files exist in .omo/evidence/. Compare deliverables against plan.
   Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [N/N] | VERDICT: APPROVE/REJECT`
 
-- [ ] F2. **Code Quality Review** — `unspecified-high`
+- [x] F2. **Code Quality Review** — `unspecified-high`
   Review all changed files for: dead code (old drawObdBar still present), unused imports, hardcoded colors (not using TH.*), magic numbers, consistency with existing patterns. Check gauge math: angle-to-RPM conversion is correct.
   Output: `Files [N clean/N issues] | Gauge math [PASS/FAIL] | VERDICT`
 
-- [ ] F3. **Visual QA + Build Verification** — `unspecified-high`
+- [x] F3. **Visual QA + Build Verification** — `unspecified-high`
   Build firmware for all 3 variants via GitHub Action. Review visual output: gauge arc zones, needle position, data panel layout, SHIFT! overlay. Verify all 5 states (demo, disconnected, connecting, connected-init, ready) produce valid output.
   Output: `Build [PASS/FAIL] | Visual [PASS/FAIL] | States [N/N] | VERDICT`
 
-- [ ] F4. **Scope Fidelity Check** — `deep`
+- [x] F4. **Scope Fidelity Check** — `deep`
   For each task: read "What to do", read actual diff (git log/diff). Verify 1:1 — everything in spec was built (no missing), nothing beyond spec was built (no creep). Check "Must NOT do" compliance. Detect cross-task contamination (e.g., task touching BleObdCentral).
   Output: `Tasks [N/N compliant] | Contamination [CLEAN/N issues] | VERDICT`
 

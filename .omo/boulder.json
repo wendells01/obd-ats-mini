@@ -1,9 +1,10 @@
 {
-  "active_plan": "/home/ubuntu/ats-mini/.omo/plans/obd-dashboard-redesign.md",
-  "started_at": "2026-06-08T22:42:37.029Z",
-  "session_ids": ["opencode:ses_156e30432ffeiCnUtcBMgzXUIK"],
-  "plan_name": "obd-dashboard-redesign",
+  "active_plan": "/home/ubuntu/ats-mini/.omo/plans/obd-bugs-and-demo.md",
+  "started_at": "2026-06-09T16:06:11.375Z",
+  "completed_at": "2026-06-09T16:14:00.000Z",
+  "session_ids": ["opencode:ses_1585aa332ffeAhonpPqD5ERytj"],
+  "plan_name": "obd-bugs-and-demo",
   "schema_version": 2,
-  "status": "active",
+  "status": "completed",
   "works": {}
 }

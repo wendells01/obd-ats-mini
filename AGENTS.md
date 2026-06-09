@@ -8,6 +8,8 @@
 git push          # or: git push <remote> main
 # then use gh to trigger:
 gh workflow run "Build Firmware" --ref main --repo <owner>/<repo>
+# monitor progress in real time:
+gh run watch $(gh run list --repo <owner>/<repo> --limit 1 --json databaseId --jq '.[0].databaseId') --repo <owner>/<repo>
 ```
 
 Three board variants (matrix in `build.yml`):

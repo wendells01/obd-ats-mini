@@ -296,7 +296,7 @@ static void drawObdGauge(int cx, int cy, int outerR, int innerR, uint16_t rpm)
   // Center RPM number (drawn last so it's always on top of needle)
   //
   spr.setFreeFont(&Orbitron_Light_24);
-  spr.setTextColor(TH.freq_text);
+  spr.setTextColor(TH.freq_text, TH.bg);
   spr.setTextDatum(TC_DATUM);
 
   char rpmStr[8];
@@ -349,7 +349,6 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
       "OBD not active - Settings -> Bluetooth -> OBD" :
       "Initializing ELM327...", 160, 75, 2);
     spr.setTextDatum(TL_DATUM);
-    spr.drawString("Click to exit", 5, 150, 2);
     return;
   }
 
@@ -357,8 +356,4 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
   drawObdGauge(82, 95, 65, 50, d.rpm);
   drawObdPanel(170, 22, 145, d);
 
-  // ── Help text ─────────────────────────────────────────
-  spr.setTextColor(TH.text_muted);
-  spr.setTextDatum(TL_DATUM);
-  spr.drawString("Click to exit", 5, 158, 2);  // was 150 — moved down to avoid panel overlap
 }
