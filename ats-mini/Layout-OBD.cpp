@@ -353,11 +353,14 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
     spr.setFreeFont(&Orbitron_Light_24);
     spr.setTextSize(3);                        // very large (~72pt)
     spr.setTextDatum(CC_DATUM);
-    // Blink only the text at 200ms intervals
-    if ((millis() / 200) & 1)
+    // Blink only the text at 100ms intervals
+    if ((millis() / 100) & 1)
     {
       spr.setTextColor(TFT_RED);
-      spr.drawString("SHIFT!", 160, 90);
+      // Faux-bold: draw at 1px offsets (same color, no outline)
+      for (int dx = -1; dx <= 1; dx++)
+        for (int dy = -1; dy <= 1; dy++)
+          spr.drawString("SHIFT!", 160 + dx, 90 + dy);
     }
     spr.setTextSize(1);
     spr.setFreeFont(NULL);
