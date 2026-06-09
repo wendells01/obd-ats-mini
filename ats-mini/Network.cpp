@@ -483,9 +483,11 @@ static void webInit()
   // ── OBD real-time JSON API ────────────────────────────────────────
   server.on("/api/obd", HTTP_GET, [](AsyncWebServerRequest *request) {
     const ObdData& d = BLEObd.obdData();
-    char json[512];
+    char json[768];
     snprintf(json, sizeof(json),
       "{\"overrideMode\":%s,\"demo\":%s,\"connected\":%s,\"ready\":%s,"
+      "\"obdScreenIdx\":%u,"
+      "\"pidEnabled\":[%s,%s,%s,%s,%s,%s,%s,%s,%s,%s],"
       "\"rpm\":%u,\"rpmValid\":%s,"
       "\"speed\":%u,\"speedValid\":%s,"
       "\"coolantTemp\":%d,\"coolantTempValid\":%s,"
@@ -500,6 +502,17 @@ static void webInit()
       BLEObd.isDemoMode()?"true":"false",
       BLEObd.isConnected()?"true":"false",
       BLEObd.isReady()?"true":"false",
+      obdScreenIdx,
+      obdPidEnabled[0]?"true":"false",
+      obdPidEnabled[1]?"true":"false",
+      obdPidEnabled[2]?"true":"false",
+      obdPidEnabled[3]?"true":"false",
+      obdPidEnabled[4]?"true":"false",
+      obdPidEnabled[5]?"true":"false",
+      obdPidEnabled[6]?"true":"false",
+      obdPidEnabled[7]?"true":"false",
+      obdPidEnabled[8]?"true":"false",
+      obdPidEnabled[9]?"true":"false",
       d.rpm, d.rpmValid?"true":"false",
       d.speed, d.speedValid?"true":"false",
       d.coolantTemp, d.coolantTempValid?"true":"false",

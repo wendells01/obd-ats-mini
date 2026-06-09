@@ -857,6 +857,10 @@ void loop()
           // Current frequency may have changed
           prefsRequestSave(SAVE_CUR_BAND);
           break;
+        case CMD_OBD:
+          // OBD screen navigation (T1 ↔ T2)
+          needRedraw |= doObdNavigation(encCount);
+          break;
         default:
           // Side bar menus / settings
           needRedraw |= doSideBar(currentCmd, encCount, encCountAccel);

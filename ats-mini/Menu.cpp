@@ -896,6 +896,7 @@ static void clickMenu(int cmd, bool shortPress)
 
     case MENU_OBD:
       currentCmd = CMD_OBD;
+      obdScreenIdx = 0;  // always start on T1
       if(bleModeIdx != BLE_OBD) {
         bleModeIdx = BLE_OBD;
         bleInit(BLE_OBD);
