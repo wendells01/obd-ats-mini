@@ -171,7 +171,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ## TODOs
 
-- [ ] 1. **Common.h — Add obdScreenIdx, PID toggle NVS keys, bump VER_SETTINGS**
+- [x] 1. **Common.h — Add obdScreenIdx, PID toggle NVS keys, bump VER_SETTINGS**
 
   **What to do**:
   - Add `extern uint8_t obdScreenIdx` (0 = T1, 1 = T2)
@@ -222,7 +222,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] 2. **Menu.h/Draw.cpp — Remove UI_OBD dead code**
+- [x] 2. **Menu.h/Draw.cpp — Remove UI_OBD dead code**
 
   **What to do**:
   - `Menu.h`: Remover `#define UI_OBD 2` (comentar ou deletar a linha)
@@ -274,7 +274,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] 3. **Network.cpp — Add POST /api/obd/config endpoint + PID checkboxes in /config page**
+- [x] 3. **Network.cpp — Add POST /api/obd/config endpoint + PID checkboxes in /config page**
 
   **What to do**:
   - Add `POST /api/obd/config` handler que recebe `pid_<NAME>=0|1` para cada PID
@@ -333,7 +333,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] 4. **Layout-OBD.h (or Draw.h) — Declare new screen functions**
+- [x] 4. **Layout-OBD.h (or Draw.h) — Declare new screen functions**
 
   **What to do**:
   - Se existir `Draw.h`, adicionar declarações:
@@ -367,7 +367,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
   **Commit**: NO (groups with 1-3)
 
-- [ ] 5. **Layout-OBD.cpp — Create drawObdScreenT1() (BMW M3 tachometer + speed)**
+- [x] 5. **Layout-OBD.cpp — Create drawObdScreenT1() (BMW M3 tachometer + speed)**
 
   **What to do**:
   - Criar função `drawObdScreenT1()` que desenha a Tela 1 (tacômetro + velocidade)
@@ -445,7 +445,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] 6. **Layout-OBD.cpp — Create drawObdScreenT2() (6-row PID grid, WebUI-filtered)**
+- [x] 6. **Layout-OBD.cpp — Create drawObdScreenT2() (6-row PID grid, WebUI-filtered)**
 
   **What to do**:
   - Criar função `drawObdScreenT2()` que desenha a Tela 2 (dados gerais)
@@ -611,7 +611,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] 8. **ats-mini.ino — Add case CMD_OBD in encoder rotation switch**
+- [x] 8. **ats-mini.ino — Add case CMD_OBD in encoder rotation switch**
 
   **What to do**:
   - No main loop (`ats-mini.ino`), localizar o `switch(currentCmd)` que trata rotacao do encoder (em torno da linha 837)
@@ -794,7 +794,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] 11. **Build + Commit + Push + CI trigger**
+- [x] 11. **Build + Commit + Push + CI trigger**
 
   **What to do**:
   - Executar em ordem:

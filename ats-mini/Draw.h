@@ -53,8 +53,8 @@ void drawScale(uint32_t freq);
 void drawLayoutDefault(const char *statusLine1, const char *statusLine2);
 void drawLayoutSmeter(const char *statusLine1, const char *statusLine2);
 void drawLayoutObd(const char *statusLine1, const char *statusLine2);
-void drawObdScreenT1();
-void drawObdScreenT2();
+void drawObdScreenT1(const ObdData& d);
+void drawObdScreenT2(const ObdData& d);
 bool doObdNavigation(int16_t enc);
 void drawObdIndicator(int x, int y);
 

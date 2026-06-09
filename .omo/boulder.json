@@ -1,1 +1,143 @@
-{}
+{
+  "active_plan": "/home/ubuntu/ats-mini/.omo/plans/obd-redesign.md",
+  "started_at": "2026-06-09T23:38:00Z",
+  "session_ids": [
+    "opencode:ses_1585aa332ffeAhonpPqD5ERytj",
+    "opencode:ses_1512f66b0ffe3T0D7Tm4hPV24i",
+    "opencode:ses_1512f527effez00tHBy0iaDZRY",
+    "opencode:ses_1512f410dffefHSuePyCJiP6m0",
+    "opencode:ses_1512f2fcbffeEM7Jrp7Gl8GwW8"
+  ],
+  "plan_name": "obd-redesign",
+  "worktree_path": null,
+  "session_origins": {
+    "opencode:ses_1585aa332ffeAhonpPqD5ERytj": "direct",
+    "opencode:ses_1512f66b0ffe3T0D7Tm4hPV24i": "appended",
+    "opencode:ses_1512f527effez00tHBy0iaDZRY": "appended",
+    "opencode:ses_1512f410dffefHSuePyCJiP6m0": "appended",
+    "opencode:ses_1512f2fcbffeEM7Jrp7Gl8GwW8": "appended"
+  },
+  "task_sessions": {
+    "final-wave:f1": {
+      "task_key": "final-wave:f1",
+      "task_label": "F1",
+      "task_title": "Plan Compliance Audit — Verify ALL implementation tasks against the OBD Redesign plan",
+      "session_id": "opencode:ses_1512f66b0ffe3T0D7Tm4hPV24i",
+      "agent": "oracle",
+      "updated_at": "2026-06-09T23:56:07.430Z"
+    },
+    "final-wave:f2": {
+      "task_key": "final-wave:f2",
+      "task_label": "F2",
+      "task_title": "Code Quality Review — Check code quality of OBD redesign implementation",
+      "session_id": "opencode:ses_1512f527effez00tHBy0iaDZRY",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-06-09T23:56:12.471Z"
+    },
+    "final-wave:f3": {
+      "task_key": "final-wave:f3",
+      "task_label": "F3",
+      "task_title": "Real Manual QA — Verify OBD redesign via code review and CI evidence (no hardware available)",
+      "session_id": "opencode:ses_1512f410dffefHSuePyCJiP6m0",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-06-09T23:56:17.336Z"
+    },
+    "final-wave:f4": {
+      "task_key": "final-wave:f4",
+      "task_label": "F4",
+      "task_title": "Scope Fidelity Check — Verify every task's \"What to do\" matches actual implementation, and \"Must NOT do\" is respected",
+      "session_id": "opencode:ses_1512f2fcbffeEM7Jrp7Gl8GwW8",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-06-09T23:56:21.449Z"
+    },
+    "todo:7": {
+      "task_key": "todo:7",
+      "task_label": "7",
+      "task_title": "**Layout-OBD.cpp — Add doObdNavigation() + obdScreenIdx dispatch + SHIFT overlay**",
+      "session_id": "opencode:ses_1512f2fcbffeEM7Jrp7Gl8GwW8",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "started_at": "2026-06-09T23:56:27.030Z",
+      "status": "running",
+      "updated_at": "2026-06-09T23:57:33.154Z"
+    }
+  },
+  "schema_version": 2,
+  "works": {
+    "obd-redesign-legacy": {
+      "work_id": "obd-redesign-legacy",
+      "active_plan": "/home/ubuntu/ats-mini/.omo/plans/obd-redesign.md",
+      "plan_name": "obd-redesign",
+      "started_at": "2026-06-09T23:38:00Z",
+      "updated_at": "2026-06-09T23:57:33.154Z",
+      "session_ids": [
+        "opencode:ses_1585aa332ffeAhonpPqD5ERytj",
+        "opencode:ses_1512f66b0ffe3T0D7Tm4hPV24i",
+        "opencode:ses_1512f527effez00tHBy0iaDZRY",
+        "opencode:ses_1512f410dffefHSuePyCJiP6m0",
+        "opencode:ses_1512f2fcbffeEM7Jrp7Gl8GwW8"
+      ],
+      "session_origins": {
+        "opencode:ses_1585aa332ffeAhonpPqD5ERytj": "direct",
+        "opencode:ses_1512f66b0ffe3T0D7Tm4hPV24i": "appended",
+        "opencode:ses_1512f527effez00tHBy0iaDZRY": "appended",
+        "opencode:ses_1512f410dffefHSuePyCJiP6m0": "appended",
+        "opencode:ses_1512f2fcbffeEM7Jrp7Gl8GwW8": "appended"
+      },
+      "worktree_path": null,
+      "task_sessions": {
+        "final-wave:f1": {
+          "task_key": "final-wave:f1",
+          "task_label": "F1",
+          "task_title": "Plan Compliance Audit — Verify ALL implementation tasks against the OBD Redesign plan",
+          "session_id": "opencode:ses_1512f66b0ffe3T0D7Tm4hPV24i",
+          "agent": "oracle",
+          "updated_at": "2026-06-09T23:56:07.430Z"
+        },
+        "final-wave:f2": {
+          "task_key": "final-wave:f2",
+          "task_label": "F2",
+          "task_title": "Code Quality Review — Check code quality of OBD redesign implementation",
+          "session_id": "opencode:ses_1512f527effez00tHBy0iaDZRY",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-06-09T23:56:12.471Z"
+        },
+        "final-wave:f3": {
+          "task_key": "final-wave:f3",
+          "task_label": "F3",
+          "task_title": "Real Manual QA — Verify OBD redesign via code review and CI evidence (no hardware available)",
+          "session_id": "opencode:ses_1512f410dffefHSuePyCJiP6m0",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-06-09T23:56:17.336Z"
+        },
+        "final-wave:f4": {
+          "task_key": "final-wave:f4",
+          "task_label": "F4",
+          "task_title": "Scope Fidelity Check — Verify every task's \"What to do\" matches actual implementation, and \"Must NOT do\" is respected",
+          "session_id": "opencode:ses_1512f2fcbffeEM7Jrp7Gl8GwW8",
+          "agent": "Sisyphus-Junior",
+          "category": "deep",
+          "updated_at": "2026-06-09T23:56:21.449Z"
+        },
+        "todo:7": {
+          "task_key": "todo:7",
+          "task_label": "7",
+          "task_title": "**Layout-OBD.cpp — Add doObdNavigation() + obdScreenIdx dispatch + SHIFT overlay**",
+          "session_id": "opencode:ses_1512f2fcbffeEM7Jrp7Gl8GwW8",
+          "agent": "Sisyphus-Junior",
+          "category": "deep",
+          "started_at": "2026-06-09T23:56:27.030Z",
+          "status": "running",
+          "updated_at": "2026-06-09T23:57:33.154Z"
+        }
+      }
+    }
+  },
+  "active_work_id": "obd-redesign-legacy",
+  "updated_at": "2026-06-09T23:57:33.154Z"
+}
