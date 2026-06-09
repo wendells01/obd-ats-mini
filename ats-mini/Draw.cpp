@@ -440,6 +440,7 @@ void drawObdIndicator(int x, int y)
       color = millis()&0x2000 ? TH.rf_icon_conn : TH.rf_icon;
 
     // Draw "OBD" text
+    spr.setFreeFont(nullptr);            // reset any leaked free font
     spr.setTextColor(color);
     spr.setTextDatum(TL_DATUM);
     spr.drawString("OBD", x, y, 1);

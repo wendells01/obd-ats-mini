@@ -22,12 +22,12 @@ static void drawObdPanel(int x, int y, int w, const ObdData& d)
       snprintf(buf, sizeof(buf), "%u", d.speed);
     else
       snprintf(buf, sizeof(buf), "--");
-    spr.drawString(buf, x + w / 2, y, 4);
+    spr.drawString(buf, x + w / 2, y + 4, 4);  // +4 to clear divider line at y=18
 
     spr.setFreeFont(NULL);
     spr.setTextColor(TH.text_muted);
     spr.setTextDatum(TC_DATUM);
-    spr.drawString("km/h", x + w / 2, y + 26, 2);
+    spr.drawString("km/h", x + w / 2, y + 30, 2);
   }
 
   // ── Helper: status → fill colour ──────────────────
@@ -266,7 +266,11 @@ static void drawObdGauge(int cx, int cy, int outerR, int innerR, uint16_t rpm)
 
   char rpmStr[8];
   snprintf(rpmStr, sizeof(rpmStr), "%u", rpm);
-  spr.drawString(rpmStr, cx, cy - 6, 4);
+
+  // Solid background behind RPM digits prevents needle pivot showing through
+  spr.setTextPadding(spr.textWidth("8888", 4));
+  spr.drawString(rpmStr, cx, cy - 8, 4);
+  spr.setTextPadding(0);  // reset padding for subsequent draws
 
   spr.setFreeFont(NULL);
   spr.setTextColor(TH.text_muted);
@@ -333,5 +337,5 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
   // ── Help text ─────────────────────────────────────────
   spr.setTextColor(TH.text_muted);
   spr.setTextDatum(TL_DATUM);
-  spr.drawString("Click to exit", 5, 150, 2);
+  spr.drawString("Click to exit", 5, 158, 2);  // was 150 — moved down to avoid panel overlap
 }

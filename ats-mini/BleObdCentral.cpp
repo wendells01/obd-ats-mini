@@ -1,6 +1,7 @@
 #include "BleObdCentral.h"
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 static BLEUUID obdServiceUUID((uint16_t)OBD_SERVICE_UUID);
 static BLEUUID txCharUUID((uint16_t)OBD_TX_CHAR_UUID);
@@ -442,19 +443,138 @@ void BleObdCentral::update()
     }
   }
 
-  // Demo mode: generate simulated data
+  // Demo mode: driving simulation state machine
   if(demoMode_ && !isConnected())
   {
     uint32_t now = millis();
-    if(now - lastDemoUpdateMs_ > 250)
+    if(now - lastDemoUpdateMs_ > 100)
     {
       lastDemoUpdateMs_ = now;
-      obdData_.rpm = (uint16_t)(2800 + 2000 * sin(now / 5000.0));
-      obdData_.speed = (uint8_t)(60 + 40 * sin(now / 8000.0));
-      obdData_.coolantTemp = (int8_t)(88 + 8 * sin(now / 15000.0));
-      obdData_.engineLoad = (uint8_t)(30 + 25 * sin(now / 5000.0));
-      { int t = 25 + 30 * sin(now / 4000.0); obdData_.throttlePos = (uint8_t)(t < 0 ? 0 : t > 255 ? 255 : t); }
+
+      // Interpolation helper: t in [0, 1]
+      auto lerp = [](float a, float b, float t) -> float { return a + (b - a) * t; };
+      auto lerpu8 = [&](uint8_t a, uint8_t b, float t) -> uint8_t { return (uint8_t)(lerp(a, b, t) + 0.5f); };
+      auto lerps8 = [&](int8_t a, int8_t b, float t) -> int8_t { return (int8_t)(lerp(a, b, t) + 0.5f); };
+      auto lerpu16 = [&](uint16_t a, uint16_t b, float t) -> uint16_t { return (uint16_t)(lerp(a, b, t) + 0.5f); };
+
+      uint32_t elapsed = now - demoPhaseStartMs_;
+      float t;
+      bool advance = true;
+
+      switch(demoPhase_)
+      {
+        case DemoPhase::Idle:
+          // 3s: engine idling
+          t = fmin((float)elapsed / 3000.0f, 1.0f);
+          obdData_.rpm        = 800;
+          obdData_.speed      = 0;
+          obdData_.coolantTemp= lerps8(87, 88, t);
+          obdData_.engineLoad = lerpu8(15, 20, t);
+          obdData_.throttlePos= lerpu8(0, 5, t);
+          break;
+
+        case DemoPhase::Accelerating:
+          // 8s: full acceleration 900→6500 RPM, 0→120 km/h
+          t = fmin((float)elapsed / 8000.0f, 1.0f);
+          obdData_.rpm        = lerpu16(900, 6500, t);
+          obdData_.speed      = lerpu8(0, 120, t);
+          obdData_.coolantTemp= lerps8(88, 95, t);
+          obdData_.engineLoad = lerpu8(20, 80, t);
+          obdData_.throttlePos= lerpu8(5, 60, t);
+          break;
+
+        case DemoPhase::ShiftCoast:
+          // 1.5s: clutch in — RPM drops 6500→4000, speed coasts up
+          t = fmin((float)elapsed / 1500.0f, 1.0f);
+          obdData_.rpm        = lerpu16(6500, 4000, t);
+          obdData_.speed      = lerpu8(120, 125, t);
+          obdData_.coolantTemp= lerps8(95, 96, t);
+          obdData_.engineLoad = lerpu8(80, 40, t);
+          obdData_.throttlePos= lerpu8(60, 10, t);
+          break;
+
+        case DemoPhase::Accelerating2:
+          // 4s: 2nd gear pull 4000→6500 RPM, 125→160 km/h
+          t = fmin((float)elapsed / 4000.0f, 1.0f);
+          obdData_.rpm        = lerpu16(4000, 6500, t);
+          obdData_.speed      = lerpu8(125, 160, t);
+          obdData_.coolantTemp= lerps8(96, 102, t);
+          obdData_.engineLoad = lerpu8(40, 85, t);
+          obdData_.throttlePos= lerpu8(10, 65, t);
+          break;
+
+        case DemoPhase::ShiftCoast2:
+          // 1.5s: 2nd shift — RPM 6500→4000, speed 160→165
+          t = fmin((float)elapsed / 1500.0f, 1.0f);
+          obdData_.rpm        = lerpu16(6500, 4000, t);
+          obdData_.speed      = lerpu8(160, 165, t);
+          obdData_.coolantTemp= lerps8(102, 103, t);
+          obdData_.engineLoad = lerpu8(85, 45, t);
+          obdData_.throttlePos= lerpu8(65, 12, t);
+          break;
+
+        case DemoPhase::Cruising:
+          // 6s: cruising — RPM tapers 4000→2200, speed coasts down
+          t = fmin((float)elapsed / 6000.0f, 1.0f);
+          obdData_.rpm        = lerpu16(4000, 2200, t);
+          obdData_.speed      = lerpu8(165, 100, t);
+          obdData_.coolantTemp= lerps8(103, 97, t);
+          obdData_.engineLoad = lerpu8(45, 30, t);
+          obdData_.throttlePos= lerpu8(12, 18, t);
+          break;
+
+        case DemoPhase::Decelerating:
+          // 5s: braking — RPM 2200→800, speed 100→5
+          t = fmin((float)elapsed / 5000.0f, 1.0f);
+          obdData_.rpm        = lerpu16(2200, 800, t);
+          obdData_.speed      = lerpu8(100, 5, t);
+          obdData_.coolantTemp= lerps8(97, 92, t);
+          obdData_.engineLoad = lerpu8(30, 10, t);
+          obdData_.throttlePos= lerpu8(18, 2, t);
+          break;
+
+        case DemoPhase::Stopping:
+          // 2s: final stop — RPM 800→0, speed 5→0
+          t = fmin((float)elapsed / 2000.0f, 1.0f);
+          obdData_.rpm        = lerpu16(800, 0, t);
+          obdData_.speed      = lerpu8(5, 0, t);
+          obdData_.coolantTemp= lerps8(92, 90, t);
+          obdData_.engineLoad = lerpu8(10, 5, t);
+          obdData_.throttlePos= lerpu8(2, 0, t);
+          break;
+
+        default:
+          advance = false;
+          break;
+      }
+
+      // Always set these during demo
+      obdData_.rpmValid         = true;
+      obdData_.speedValid       = true;
+      obdData_.coolantTempValid = true;
+      obdData_.engineLoadValid  = true;
+      obdData_.throttlePosValid = true;
+      obdData_.intakeTemp       = 40;
+      obdData_.intakeTempValid  = true;
+      obdData_.batteryVoltage   = 12.6f;
+      obdData_.batteryVoltageValid = true;
+      obdData_.fuelLevel        = 75;
+      obdData_.fuelLevelValid   = true;
+      obdData_.timingAdvance    = (int8_t)(lerp(8, 15, fmin(obdData_.rpm / 6500.0f, 1.0f)) + 0.5f);
+      obdData_.timingAdvanceValid = true;
+      obdData_.mafRate          = (uint16_t)(lerp(200, 600, fmin(obdData_.rpm / 6500.0f, 1.0f)) + 0.5f);
+      obdData_.mafRateValid     = true;
+
       obdData_.updated = now;
+
+      // Advance to next phase when current one completes
+      if(advance && t >= 1.0f)
+      {
+        demoPhase_ = static_cast<DemoPhase>((uint8_t)demoPhase_ + 1);
+        if(demoPhase_ > DemoPhase::Stopping)
+          demoPhase_ = DemoPhase::Idle;
+        demoPhaseStartMs_ = now;
+      }
     }
   }
 }
@@ -480,16 +600,20 @@ void BleObdCentral::enableDemoMode(bool enable)
   demoMode_ = enable;
   if(enable)
   {
-    obdData_.rpm = 1200;
-    obdData_.speed = 60;
+    demoPhase_ = DemoPhase::Idle;
+    demoPhaseStartMs_ = millis();
+    lastDemoUpdateMs_ = millis();
+
+    obdData_.rpm = 800;
+    obdData_.speed = 0;
     obdData_.coolantTemp = 87;
-    obdData_.engineLoad = 35;
+    obdData_.engineLoad = 15;
     obdData_.intakeTemp = 40;
-    obdData_.throttlePos = 25;
+    obdData_.throttlePos = 0;
     obdData_.batteryVoltage = 12.6f;
     obdData_.fuelLevel = 75;
-    obdData_.timingAdvance = 12;
-    obdData_.mafRate = 450;
+    obdData_.timingAdvance = 8;
+    obdData_.mafRate = 200;
 
     obdData_.rpmValid = true;
     obdData_.speedValid = true;
@@ -502,7 +626,6 @@ void BleObdCentral::enableDemoMode(bool enable)
     obdData_.timingAdvanceValid = true;
     obdData_.mafRateValid = true;
     obdData_.updated = millis();
-    lastDemoUpdateMs_ = millis();
   }
 }
 

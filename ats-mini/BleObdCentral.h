@@ -147,6 +147,20 @@ private:
   bool demoMode_ = false;
   uint32_t lastDemoUpdateMs_ = 0;
 
+  // Demo driving simulation state machine
+  enum class DemoPhase : uint8_t {
+    Idle,
+    Accelerating,
+    ShiftCoast,
+    Accelerating2,
+    ShiftCoast2,
+    Cruising,
+    Decelerating,
+    Stopping,
+  };
+  DemoPhase demoPhase_ = DemoPhase::Idle;
+  uint32_t demoPhaseStartMs_ = 0;
+
   static constexpr const char* initCommands_[] = {
     "ATZ\r", "ATE0\r", "ATL0\r", "ATS0\r", "ATH0\r", "ATSP0\r"
   };
