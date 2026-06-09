@@ -377,6 +377,13 @@ void BleObdCentral::processResponse()
 
 void BleObdCentral::update()
 {
+  // Override mode takes top priority — inject user-set values
+  if(overrideMode_)
+  {
+    obdData_ = obdOverrides_;
+    obdData_.updated = millis();
+    return;
+  }
 
   if(demoMode_ && !isConnected())
   {
@@ -639,6 +646,37 @@ bool BleObdCentral::isDemoMode() const
 {
   return demoMode_;
 }
+
+// ------------------------------------------------------------------
+// WebUI override control
+// ------------------------------------------------------------------
+
+void BleObdCentral::setOverrideMode(bool enable)
+{
+  overrideMode_ = enable;
+  if(enable)
+  {
+    obdOverrides_ = obdData_;
+    // Ensure freshness
+    obdOverrides_.updated = millis();
+  }
+}
+
+bool BleObdCentral::isOverrideMode() const
+{
+  return overrideMode_;
+}
+
+void BleObdCentral::setOverrideRpm(uint16_t v)          { obdOverrides_.rpm = v; obdOverrides_.rpmValid = true; }
+void BleObdCentral::setOverrideSpeed(uint8_t v)         { obdOverrides_.speed = v; obdOverrides_.speedValid = true; }
+void BleObdCentral::setOverrideCoolantTemp(int8_t v)    { obdOverrides_.coolantTemp = v; obdOverrides_.coolantTempValid = true; }
+void BleObdCentral::setOverrideEngineLoad(uint8_t v)   { obdOverrides_.engineLoad = v; obdOverrides_.engineLoadValid = true; }
+void BleObdCentral::setOverrideIntakeTemp(int8_t v)     { obdOverrides_.intakeTemp = v; obdOverrides_.intakeTempValid = true; }
+void BleObdCentral::setOverrideThrottlePos(uint8_t v)   { obdOverrides_.throttlePos = v; obdOverrides_.throttlePosValid = true; }
+void BleObdCentral::setOverrideBatteryVoltage(float v)  { obdOverrides_.batteryVoltage = v; obdOverrides_.batteryVoltageValid = true; }
+void BleObdCentral::setOverrideFuelLevel(uint8_t v)     { obdOverrides_.fuelLevel = v; obdOverrides_.fuelLevelValid = true; }
+void BleObdCentral::setOverrideMafRate(uint16_t v)      { obdOverrides_.mafRate = v; obdOverrides_.mafRateValid = true; }
+void BleObdCentral::setOverrideTimingAdvance(int8_t v)  { obdOverrides_.timingAdvance = v; obdOverrides_.timingAdvanceValid = true; }
 
 // ------------------------------------------------------------------
 // PID parsers

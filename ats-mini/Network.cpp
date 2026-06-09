@@ -467,7 +467,7 @@ static void webInit()
     const ObdData& d = BLEObd.obdData();
     char json[512];
     snprintf(json, sizeof(json),
-      "{\"demo\":%s,\"connected\":%s,\"ready\":%s,"
+      "{\"overrideMode\":%s,\"demo\":%s,\"connected\":%s,\"ready\":%s,"
       "\"rpm\":%u,\"rpmValid\":%s,"
       "\"speed\":%u,\"speedValid\":%s,"
       "\"coolantTemp\":%d,\"coolantTempValid\":%s,"
@@ -478,6 +478,7 @@ static void webInit()
       "\"fuelLevel\":%u,\"fuelLevelValid\":%s,"
       "\"mafRate\":%u,\"mafRateValid\":%s,"
       "\"timingAdvance\":%d,\"timingAdvanceValid\":%s}",
+      BLEObd.isOverrideMode()?"true":"false",
       BLEObd.isDemoMode()?"true":"false",
       BLEObd.isConnected()?"true":"false",
       BLEObd.isReady()?"true":"false",
@@ -496,6 +497,41 @@ static void webInit()
     resp->addHeader("Access-Control-Allow-Origin", "*");
     resp->addHeader("Cache-Control", "no-cache");
     request->send(resp);
+  });
+
+  // ── OBD control endpoint (POST to set override values) ────────────
+  server.on("/api/obd/set", HTTP_POST, [](AsyncWebServerRequest *request) {
+    if(request->hasParam("mode", true))
+    {
+      bool enable = request->getParam("mode", true)->value() == "1";
+      BLEObd.setOverrideMode(enable);
+    }
+
+    if(BLEObd.isOverrideMode())
+    {
+      if(request->hasParam("rpm", true))
+        BLEObd.setOverrideRpm((uint16_t)request->getParam("rpm", true)->value().toInt());
+      if(request->hasParam("speed", true))
+        BLEObd.setOverrideSpeed((uint8_t)request->getParam("speed", true)->value().toInt());
+      if(request->hasParam("coolantTemp", true))
+        BLEObd.setOverrideCoolantTemp((int8_t)request->getParam("coolantTemp", true)->value().toInt());
+      if(request->hasParam("engineLoad", true))
+        BLEObd.setOverrideEngineLoad((uint8_t)request->getParam("engineLoad", true)->value().toInt());
+      if(request->hasParam("intakeTemp", true))
+        BLEObd.setOverrideIntakeTemp((int8_t)request->getParam("intakeTemp", true)->value().toInt());
+      if(request->hasParam("throttlePos", true))
+        BLEObd.setOverrideThrottlePos((uint8_t)request->getParam("throttlePos", true)->value().toInt());
+      if(request->hasParam("batteryVoltage", true))
+        BLEObd.setOverrideBatteryVoltage(request->getParam("batteryVoltage", true)->value().toFloat());
+      if(request->hasParam("fuelLevel", true))
+        BLEObd.setOverrideFuelLevel((uint8_t)request->getParam("fuelLevel", true)->value().toInt());
+      if(request->hasParam("mafRate", true))
+        BLEObd.setOverrideMafRate((uint16_t)request->getParam("mafRate", true)->value().toInt());
+      if(request->hasParam("timingAdvance", true))
+        BLEObd.setOverrideTimingAdvance((int8_t)request->getParam("timingAdvance", true)->value().toInt());
+    }
+
+    request->redirect("/obd");
   });
 
   // ── OBD real-time dashboard page ──────────────────────────────────
@@ -950,31 +986,57 @@ static const String webObdDashboardPage()
 "<TR><TD>MAF Rate</TD><TD ID='mafRate' ALIGN='CENTER'>--</TD><TD ID='mafRateS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
 "<TR><TD>Timing Advance</TD><TD ID='timingAdvance' ALIGN='CENTER'>--</TD><TD ID='timingAdvanceS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
 "</TABLE>"
+"<HR>"
+"<H2 ALIGN='CENTER'>Control</H2>"
+"<FORM ACTION='/api/obd/set' METHOD='POST'>"
+"<TABLE BORDER=1 CELLPADDING=6 STYLE='margin:auto;'>"
+"<TR><TD COLSPAN=2 ALIGN='CENTER'>"
+  "<LABEL><INPUT TYPE='CHECKBOX' NAME='mode' VALUE='1' ID='modeCb' ONCHANGE='document.getElementById(\"ctrlForm\").submit()'> Enable override mode (set values manually)</LABEL>"
+"</TD></TR>"
+"<TR><TD>RPM (0-8000)</TD><TD><INPUT TYPE='number' NAME='rpm' ID='iRpm' VALUE='0' MIN='0' MAX='8000'></TD></TR>"
+"<TR><TD>Speed (km/h)</TD><TD><INPUT TYPE='number' NAME='speed' ID='iSpeed' VALUE='0' MIN='0' MAX='255'></TD></TR>"
+"<TR><TD>Coolant Temp (°C)</TD><TD><INPUT TYPE='number' NAME='coolantTemp' ID='iCoolant' VALUE='0' MIN='-40' MAX='215'></TD></TR>"
+"<TR><TD>Engine Load (%)</TD><TD><INPUT TYPE='number' NAME='engineLoad' ID='iLoad' VALUE='0' MIN='0' MAX='100'></TD></TR>"
+"<TR><TD>Intake Temp (°C)</TD><TD><INPUT TYPE='number' NAME='intakeTemp' ID='iIntake' VALUE='0' MIN='-40' MAX='215'></TD></TR>"
+"<TR><TD>Throttle (%)</TD><TD><INPUT TYPE='number' NAME='throttlePos' ID='iThrottle' VALUE='0' MIN='0' MAX='100'></TD></TR>"
+"<TR><TD>Battery Voltage</TD><TD><INPUT TYPE='number' NAME='batteryVoltage' ID='iBatt' VALUE='12.0' MIN='0' MAX='20' STEP='0.1'></TD></TR>"
+"<TR><TD>Fuel Level (%)</TD><TD><INPUT TYPE='number' NAME='fuelLevel' ID='iFuel' VALUE='0' MIN='0' MAX='100'></TD></TR>"
+"<TR><TD>MAF Rate (g/s)</TD><TD><INPUT TYPE='number' NAME='mafRate' ID='iMaf' VALUE='0' MIN='0' MAX='65535'></TD></TR>"
+"<TR><TD>Timing Advance (°)</TD><TD><INPUT TYPE='number' NAME='timingAdvance' ID='iTiming' VALUE='0' MIN='-64' MAX='63'></TD></TR>"
+"<TR><TD COLSPAN=2 ALIGN='CENTER'><INPUT TYPE='SUBMIT' VALUE='Apply' STYLE='width:80%;padding:10px;'></TD></TR>"
+"</TABLE>"
+"</FORM>"
 "<SCRIPT>"
 "(function(){"
 "var cols={valid:'green',invalid:'red'};"
+"var f = document.getElementById('modeCb').form;"
+"f.id='ctrlForm';"
 "function u(){"
   "fetch('/api/obd').then(function(r){return r.json();}).then(function(d){"
-    "var st=d.demo?'DEMO MODE':d.ready?'Connected to ELM327':d.connected?'Initializing...':'Not active';"
+    "var st=d.overrideMode?'OVERRIDE ACTIVE':d.demo?'DEMO MODE':d.ready?'Connected to ELM327':d.connected?'Initializing...':'Not active';"
     "var el=document.getElementById('status');"
     "el.innerHTML=st;"
-    "el.style.color=d.demo?'orange':d.ready?'green':'gray';"
-    "var f=function(id,v,s){"
+    "el.style.color=d.overrideMode?'#e67e22':d.demo?'orange':d.ready?'green':'gray';"
+    "var ff=function(id,v,s){"
       "document.getElementById(id).textContent=v;"
       "var se=document.getElementById(id+'S');"
       "se.textContent=s?'OK':'--';"
       "se.style.color=s?cols.valid:cols.invalid;"
     "};"
-    "f('rpm',d.rpm+(d.demo?'*':''),d.rpmValid);"
-    "f('speed',d.speed+' km/h',d.speedValid);"
-    "f('coolantTemp',d.coolantTemp+' °C',d.coolantTempValid);"
-    "f('engineLoad',d.engineLoad+' %',d.engineLoadValid);"
-    "f('intakeTemp',d.intakeTemp+' °C',d.intakeTempValid);"
-    "f('throttlePos',d.throttlePos+' %',d.throttlePosValid);"
-    "f('batteryVoltage',d.batteryVoltage+' V',d.batteryVoltageValid);"
-    "f('fuelLevel',d.fuelLevel+' %',d.fuelLevelValid);"
-    "f('mafRate',d.mafRate+' g/s',d.mafRateValid);"
-    "f('timingAdvance',d.timingAdvance+' °',d.timingAdvanceValid);"
+    "ff('rpm',d.rpm+(d.demo?'*':''),d.rpmValid);"
+    "ff('speed',d.speed+' km/h',d.speedValid);"
+    "ff('coolantTemp',d.coolantTemp+' °C',d.coolantTempValid);"
+    "ff('engineLoad',d.engineLoad+' %',d.engineLoadValid);"
+    "ff('intakeTemp',d.intakeTemp+' °C',d.intakeTempValid);"
+    "ff('throttlePos',d.throttlePos+' %',d.throttlePosValid);"
+    "ff('batteryVoltage',d.batteryVoltage+' V',d.batteryVoltageValid);"
+    "ff('fuelLevel',d.fuelLevel+' %',d.fuelLevelValid);"
+    "ff('mafRate',d.mafRate+' g/s',d.mafRateValid);"
+    "ff('timingAdvance',d.timingAdvance+' °',d.timingAdvanceValid);"
+    "var cb=document.getElementById('modeCb');"
+    "cb.checked=d.overrideMode;"
+    "var inputs=f.querySelectorAll('input[type=number]');"
+    "for(var i=0;i<inputs.length;i++){inputs[i].disabled=!d.overrideMode;}"
   "}).catch(function(){"
     "document.getElementById('status').textContent='Offline';"
     "document.getElementById('status').style.color='red';"

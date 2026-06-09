@@ -64,10 +64,25 @@ public:
   bool consumeAbortPending();
 
   const ObdData& obdData() const { return obdData_; }
-  bool isReady() const { return demoMode_ || elmState_ == ElmState::Ready; }
+  bool isReady() const { return demoMode_ || elmState_ == ElmState::Ready || overrideMode_; }
 
   void enableDemoMode(bool enable);
   bool isDemoMode() const;
+
+  // WebUI override control — lets user inject OBD values from the web dashboard
+  void setOverrideMode(bool enable);
+  bool isOverrideMode() const;
+
+  void setOverrideRpm(uint16_t v);
+  void setOverrideSpeed(uint8_t v);
+  void setOverrideCoolantTemp(int8_t v);
+  void setOverrideEngineLoad(uint8_t v);
+  void setOverrideIntakeTemp(int8_t v);
+  void setOverrideThrottlePos(uint8_t v);
+  void setOverrideBatteryVoltage(float v);
+  void setOverrideFuelLevel(uint8_t v);
+  void setOverrideMafRate(uint16_t v);
+  void setOverrideTimingAdvance(int8_t v);
 
 protected:
   void configureSecurity() override;
@@ -147,6 +162,10 @@ private:
   uint32_t cmdStartMs_ = 0;
   bool demoMode_ = false;
   uint32_t lastDemoUpdateMs_ = 0;
+
+  // WebUI override — lets user inject values from the browser
+  bool overrideMode_ = false;
+  ObdData obdOverrides_;
 
   // Demo driving simulation state machine
   enum class DemoPhase : uint8_t {

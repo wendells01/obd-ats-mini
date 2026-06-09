@@ -346,15 +346,23 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
 
   // ── Full-screen SHIFT! overlay (FuelTech-style) ───────
   // Blinks at 500ms intervals when RPM exceeds limit.
+  // Uses faux-bold (multi-offset draw) for thick, aggressive look.
   if (d.rpm >= SHIFT_RPM_LIMIT && ((millis() / 500) & 1))
   {
     spr.fillRect(0, 19, 320, 151, TFT_YELLOW);
     spr.drawRect(0, 19, 320, 151, TFT_RED);   // red border
     spr.setFreeFont(&Orbitron_Light_24);
-    spr.setTextSize(2);                        // double font size
-    spr.setTextColor(TFT_RED);
+    spr.setTextSize(3);                        // very large (~72pt)
     spr.setTextDatum(CC_DATUM);
-    spr.drawString("SHIFT!", 160, 90);         // no font param — uses freefont
+    // Faux-bold outline (black offsets)
+    spr.setTextColor(TFT_BLACK);
+    spr.drawString("SHIFT!", 157, 87);
+    spr.drawString("SHIFT!", 163, 87);
+    spr.drawString("SHIFT!", 157, 93);
+    spr.drawString("SHIFT!", 163, 93);
+    // Main bold red text on top
+    spr.setTextColor(TFT_RED);
+    spr.drawString("SHIFT!", 160, 90);
     spr.setTextSize(1);
     spr.setFreeFont(NULL);
   }
