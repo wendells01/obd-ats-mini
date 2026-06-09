@@ -80,6 +80,10 @@ int bleLoop(uint8_t bleMode)
     return BLEObd.isConnected() ? REMOTE_CHANGED : 0;
   }
 
+  // Run OBD demo state machine even when BLE mode is not OBD
+  if (BLEObd.isDemoMode())
+    BLEObd.update();
+
   if (bleMode != BLE_HID)
     return 0;
 

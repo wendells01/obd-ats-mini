@@ -12,22 +12,18 @@ static void drawObdPanel(int x, int y, int w, const ObdData& d)
 {
   const uint16_t GRAY = spr.color565(120, 120, 120);
 
-  // ── Row 0: SPEED (large, centred) ──────────────────
+  // ── Row 0: SPEED (large, left-aligned, inline km/h) ─
   {
     spr.setFreeFont(&Orbitron_Light_24);
     spr.setTextColor(d.speedValid ? TH.freq_text : GRAY);
-    spr.setTextDatum(TC_DATUM);
-    char buf[12];
+    spr.setTextDatum(TL_DATUM);
+    char buf[16];
     if (d.speedValid)
-      snprintf(buf, sizeof(buf), "%u", d.speed);
+      snprintf(buf, sizeof(buf), "%u km/h", d.speed);
     else
-      snprintf(buf, sizeof(buf), "--");
-    spr.drawString(buf, x + w / 2, y + 4, 4);  // +4 to clear divider line at y=18
-
+      snprintf(buf, sizeof(buf), "-- km/h");
+    spr.drawString(buf, x, y, 4);
     spr.setFreeFont(NULL);
-    spr.setTextColor(TH.text_muted);
-    spr.setTextDatum(TC_DATUM);
-    spr.drawString("km/h", x + w / 2, y + 30, 2);
   }
 
   // ── Helper: status → fill colour ──────────────────
@@ -125,14 +121,29 @@ static void drawObdPanel(int x, int y, int w, const ObdData& d)
 
   // ── Data rows ───────────────────────────────────
   char buf[16];
+  uint16_t fg;
 
   // Row 1 (y=50) — Coolant Temp
   {
     bool ok = d.coolantTempValid;
-    snprintf(buf, sizeof(buf), ok ? "%d C" : "--", d.coolantTemp);
-    drawRow(50, "Cool", buf, ok,
+    fg = ok ? TH.text : GRAY;
+    // drawRow without the value so we can append °C manually
+    drawRow(50, "Cool", "", ok,
             ok ? coolantStatus(d.coolantTemp) : 2,
             ok ? coolantPct(d.coolantTemp) : 0, true);
+    // Redraw value + degree symbol manually (font 2 has no ° glyph)
+    spr.setTextColor(fg);
+    if (ok) {
+      char val[8];
+      snprintf(val, sizeof(val), "%d", d.coolantTemp);
+      int vx = x + 52, vy = 50 + 2;
+      spr.drawString(val, vx, vy, 2);
+      int valW = spr.textWidth(val, 2);
+      spr.drawCircle(vx + valW + 5, vy + 4, 2, fg);   // ° symbol
+      spr.drawString("C", vx + valW + 10, vy, 2);
+    } else {
+      spr.drawString("--", x + 52, 50 + 2, 2);
+    }
   }
 
   // Row 2 (y=72) — Engine Load
@@ -165,10 +176,22 @@ static void drawObdPanel(int x, int y, int w, const ObdData& d)
   // Row 5 (y=138) — Intake Temp (no mini bar)
   {
     bool ok = d.intakeTempValid;
-    snprintf(buf, sizeof(buf), ok ? "%d C" : "--", d.intakeTemp);
-    drawRow(138, "Intake", buf, ok,
+    fg = ok ? TH.text : GRAY;
+    drawRow(138, "Intake", "", ok,
             ok ? intakeStatus(d.intakeTemp) : 2,
             ok ? intakePct(d.intakeTemp) : 0, false);
+    spr.setTextColor(fg);
+    if (ok) {
+      char val[8];
+      snprintf(val, sizeof(val), "%d", d.intakeTemp);
+      int vx = x + 52, vy = 138 + 2;
+      spr.drawString(val, vx, vy, 2);
+      int valW = spr.textWidth(val, 2);
+      spr.drawCircle(vx + valW + 5, vy + 4, 2, fg);
+      spr.drawString("C", vx + valW + 10, vy, 2);
+    } else {
+      spr.drawString("--", x + 52, 138 + 2, 2);
+    }
   }
 }
 
@@ -258,26 +281,6 @@ static void drawObdGauge(int cx, int cy, int outerR, int innerR, uint16_t rpm)
   spr.fillCircle(cx, cy, 4, TH.freq_text);
 
   //
-  // Center RPM number
-  //
-  spr.setFreeFont(&Orbitron_Light_24);
-  spr.setTextColor(TH.freq_text);
-  spr.setTextDatum(TC_DATUM);
-
-  char rpmStr[8];
-  snprintf(rpmStr, sizeof(rpmStr), "%u", rpm);
-
-  // Solid background behind RPM digits prevents needle pivot showing through
-  spr.setTextPadding(spr.textWidth("8888", 4));
-  spr.drawString(rpmStr, cx, cy - 8, 4);
-  spr.setTextPadding(0);  // reset padding for subsequent draws
-
-  spr.setFreeFont(NULL);
-  spr.setTextColor(TH.text_muted);
-  spr.setTextDatum(TC_DATUM);
-  spr.drawString("RPM", cx, cy + 20, 2);
-
-  //
   // SHIFT! blinking overlay
   //
   if (rpm >= SHIFT_RPM_LIMIT && ((millis() / 500) & 1))
@@ -288,6 +291,26 @@ static void drawObdGauge(int cx, int cy, int outerR, int innerR, uint16_t rpm)
     spr.drawString("SHIFT!", cx, cy + 42, 4);
     spr.setFreeFont(NULL);
   }
+
+  //
+  // Center RPM number (drawn last so it's always on top of needle)
+  //
+  spr.setFreeFont(&Orbitron_Light_24);
+  spr.setTextColor(TH.freq_text);
+  spr.setTextDatum(TC_DATUM);
+
+  char rpmStr[8];
+  snprintf(rpmStr, sizeof(rpmStr), "%u", rpm);
+
+  // Wide padding ensures needle base does not show through character gaps
+  spr.setTextPadding(spr.textWidth("8888", 4) + 6);
+  spr.drawString(rpmStr, cx, cy - 8, 4);
+  spr.setTextPadding(0);
+
+  spr.setFreeFont(NULL);
+  spr.setTextColor(TH.text_muted);
+  spr.setTextDatum(TC_DATUM);
+  spr.drawString("RPM", cx, cy + 20, 2);
 }
 
 // ─────────────────────────────────────────────────────────
