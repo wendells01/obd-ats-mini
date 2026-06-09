@@ -516,9 +516,6 @@ void drawScreen(const char *statusLine1, const char *statusLine2)
     case UI_SMETER:
       drawLayoutSmeter(statusLine1, statusLine2);
       break;
-    case UI_OBD:
-      drawLayoutObd(statusLine1, statusLine2);
-      break;
     default:
       drawLayoutDefault(statusLine1, statusLine2);
       break;

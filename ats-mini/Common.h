@@ -14,8 +14,8 @@
 #define AUTHORS_LINE3  "Goshante, G8PTN (Dave), R9UCL (Max Arnold),"
 #define AUTHORS_LINE4  "Marat Fayzullin"
 
-#define VER_APP        236  // Firmware version — OBD fixes + driving simulation demo mode
-#define VER_SETTINGS   71   // Settings version
+#define VER_APP        237  // Firmware version — OBD redesign BMW M3 style
+#define VER_SETTINGS   72   // Settings version (added obdPidEnabled[10])
 #define VER_MEMORIES   71   // Memories version
 #define VER_BANDS      72   // Bands version
 #define VER_STORAGE     0   // LittleFS storage version
@@ -191,6 +191,13 @@ extern uint8_t wifiModeIdx;
 extern uint8_t FmRegionIdx;
 
 extern volatile int otaProgress; // OTA update progress: -1 = idle, 0-100 = in progress
+
+// OBD screen state
+extern uint8_t obdScreenIdx;          // 0 = T1 (tachometer+speed), 1 = T2 (data grid)
+
+// OBD PID visibility toggles (for T2 data grid, persisted in NVS)
+#define OBD_PID_COUNT 10
+extern bool obdPidEnabled[OBD_PID_COUNT];
 
 extern int8_t agcIdx;
 extern int8_t agcNdx;

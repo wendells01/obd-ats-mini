@@ -198,6 +198,18 @@ void prefsSave(uint32_t items)
     prefs.putUChar("BLEMode",     bleModeIdx);     // Bluetooth mode
     prefs.putUChar("USBMode",     usbModeIdx);     // USB mode
 
+    // Save OBD PID visibility toggles
+    prefs.putBool("PidRPM",      obdPidEnabled[0]);
+    prefs.putBool("PidSpeed",    obdPidEnabled[1]);
+    prefs.putBool("PidCoolant",  obdPidEnabled[2]);
+    prefs.putBool("PidLoad",     obdPidEnabled[3]);
+    prefs.putBool("PidIntake",   obdPidEnabled[4]);
+    prefs.putBool("PidMAF",      obdPidEnabled[5]);
+    prefs.putBool("PidThrottle", obdPidEnabled[6]);
+    prefs.putBool("PidTiming",   obdPidEnabled[7]);
+    prefs.putBool("PidFuel",     obdPidEnabled[8]);
+    prefs.putBool("PidBatt",     obdPidEnabled[9]);
+
     // Done with global settings
     prefs.end();
   }
@@ -278,6 +290,18 @@ bool prefsLoad(uint32_t items)
     uiLayoutIdx    = prefs.getUChar("UILayout", uiLayoutIdx);   // UI Layout
     bleModeIdx     = prefs.getUChar("BLEMode", bleModeIdx);     // Bluetooth mode
     usbModeIdx     = prefs.getUChar("USBMode", usbModeIdx);     // USB mode
+
+    // Load OBD PID visibility toggles (with defaults matching Layout-OBD.cpp)
+    obdPidEnabled[0] = prefs.getBool("PidRPM",      true);
+    obdPidEnabled[1] = prefs.getBool("PidSpeed",    true);
+    obdPidEnabled[2] = prefs.getBool("PidCoolant",  true);
+    obdPidEnabled[3] = prefs.getBool("PidLoad",     true);
+    obdPidEnabled[4] = prefs.getBool("PidIntake",   true);
+    obdPidEnabled[5] = prefs.getBool("PidMAF",      false);
+    obdPidEnabled[6] = prefs.getBool("PidThrottle", true);
+    obdPidEnabled[7] = prefs.getBool("PidTiming",   false);
+    obdPidEnabled[8] = prefs.getBool("PidFuel",     true);
+    obdPidEnabled[9] = prefs.getBool("PidBatt",     true);
 
     // Done with global settings
     prefs.end();

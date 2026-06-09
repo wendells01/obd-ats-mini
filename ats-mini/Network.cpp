@@ -462,6 +462,24 @@ static void webInit()
     }
   );
 
+  // ── OBD PID config endpoint (POST to toggle PID visibility on T2) ─
+  server.on("/api/obd/config", HTTP_POST, [](AsyncWebServerRequest *request) {
+    // Map PID parameter names to index
+    static const struct { const char* name; uint8_t idx; } pidMap[] = {
+      {"pid_rpm",      0}, {"pid_speed",    1}, {"pid_coolantTemp", 2},
+      {"pid_engineLoad", 3}, {"pid_intakeTemp", 4}, {"pid_mafRate",  5},
+      {"pid_throttlePos", 6}, {"pid_timingAdvance", 7}, {"pid_fuelLevel", 8},
+      {"pid_batteryVoltage", 9}
+    };
+    for (auto &entry : pidMap) {
+      if (request->hasParam(entry.name, true)) {
+        obdPidEnabled[entry.idx] = request->getParam(entry.name, true)->value() == "1";
+      }
+    }
+    prefsRequestSave(SAVE_ALL);
+    request->redirect("/config");
+  });
+
   // ── OBD real-time JSON API ────────────────────────────────────────
   server.on("/api/obd", HTTP_GET, [](AsyncWebServerRequest *request) {
     const ObdData& d = BLEObd.obdData();
@@ -609,6 +627,19 @@ void webSetConfig(AsyncWebServerRequest *request)
   obdDemoEnabled = request->hasParam("obddemo", true) && request->getParam("obddemo", true)->value() == "1";
   prefs.putBool("obddemo", obdDemoEnabled);
   BLEObd.enableDemoMode(obdDemoEnabled);
+
+  // Save OBD PID visibility toggles (persisted by Storage.cpp in "settings" namespace)
+  static const struct { const char* name; uint8_t idx; } pidMap[] = {
+    {"pid_rpm", 0}, {"pid_speed", 1}, {"pid_coolantTemp", 2},
+    {"pid_engineLoad", 3}, {"pid_intakeTemp", 4}, {"pid_mafRate", 5},
+    {"pid_throttlePos", 6}, {"pid_timingAdvance", 7}, {"pid_fuelLevel", 8},
+    {"pid_batteryVoltage", 9}
+  };
+  for (auto &entry : pidMap) {
+    obdPidEnabled[entry.idx] = request->hasParam(entry.name, true) &&
+      request->getParam(entry.name, true)->value() == "1";
+  }
+  prefsSave |= SAVE_SETTINGS;  // trigger async save through Storage.cpp
 
   // Done with the preferences
   prefs.end();
@@ -929,6 +960,57 @@ const String webConfigPage()
     "<TD CLASS='LABEL'>OBD Demo Mode</TD>"
     "<TD><INPUT TYPE='CHECKBOX' NAME='obddemo' VALUE='1'" +
     (obdDemoEnabled? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR><TH COLSPAN=2 CLASS='HEADING'>OBD T2 PID Visibility</TH></TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>RPM</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_rpm' VALUE='1'" +
+    (obdPidEnabled[0]? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>Speed</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_speed' VALUE='1'" +
+    (obdPidEnabled[1]? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>Coolant Temp</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_coolantTemp' VALUE='1'" +
+    (obdPidEnabled[2]? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>Engine Load</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_engineLoad' VALUE='1'" +
+    (obdPidEnabled[3]? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>Intake Temp</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_intakeTemp' VALUE='1'" +
+    (obdPidEnabled[4]? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>MAF Rate</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_mafRate' VALUE='1'" +
+    (obdPidEnabled[5]? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>Throttle Position</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_throttlePos' VALUE='1'" +
+    (obdPidEnabled[6]? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>Timing Advance</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_timingAdvance' VALUE='1'" +
+    (obdPidEnabled[7]? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>Fuel Level</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_fuelLevel' VALUE='1'" +
+    (obdPidEnabled[8]? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>Battery Voltage</TD>"
+    "<TD><INPUT TYPE='CHECKBOX' NAME='pid_batteryVoltage' VALUE='1'" +
+    (obdPidEnabled[9]? " CHECKED ":"") + "></TD>"
   "</TR>"
   "<TR><TH COLSPAN=2 CLASS='HEADING'>"
     "<INPUT TYPE='SUBMIT' VALUE='Save'>"

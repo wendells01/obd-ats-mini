@@ -54,7 +54,7 @@
 // UI Layouts
 #define UI_DEFAULT  0
 #define UI_SMETER   1
-#define UI_OBD      2
+// UI_OBD (2) removed — OBD is now a CMD overlay, not a layout
 #define UI_LAYOUT_COUNT 2
 
 // Seek modes

@@ -5,6 +5,21 @@
 #include "BleMode.h"
 #include <math.h>
 
+// Global OBD screen state
+uint8_t obdScreenIdx = 0;                                   // 0=T1 (tach), 1=T2 (data)
+bool obdPidEnabled[OBD_PID_COUNT] = {
+  true,   // 0: rpm
+  true,   // 1: speed
+  true,   // 2: coolantTemp
+  true,   // 3: engineLoad
+  true,   // 4: intakeTemp
+  false,  // 5: mafRate
+  true,   // 6: throttlePos
+  false,  // 7: timingAdvance
+  true,   // 8: fuelLevel
+  true    // 9: batteryVoltage
+};
+
 // ─────────────────────────────────────────────────────────
 // Right-side OBD data panel — 6 PID indicators
 // ─────────────────────────────────────────────────────────
