@@ -349,10 +349,13 @@ void drawLayoutObd(const char *statusLine1, const char *statusLine2)
   if (d.rpm >= SHIFT_RPM_LIMIT && ((millis() / 500) & 1))
   {
     spr.fillRect(0, 19, 320, 151, TFT_YELLOW);
+    spr.drawRect(0, 19, 320, 151, TFT_RED);   // red border
     spr.setFreeFont(&Orbitron_Light_24);
+    spr.setTextSize(2);                        // double font size
     spr.setTextColor(TFT_RED);
     spr.setTextDatum(CC_DATUM);
-    spr.drawString("SHIFT!", 160, 95, 4);
+    spr.drawString("SHIFT!", 160, 90);         // no font param — uses freefont
+    spr.setTextSize(1);
     spr.setFreeFont(NULL);
   }
 }

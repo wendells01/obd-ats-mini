@@ -65,6 +65,7 @@ static const String webRadioPage();
 static const String webMemoryPage();
 static const String webConfigPage();
 static const String webUpdatePage();
+static const String webObdDashboardPage();
 
 //
 // Delayed WiFi connection
@@ -461,6 +462,47 @@ static void webInit()
     }
   );
 
+  // ── OBD real-time JSON API ────────────────────────────────────────
+  server.on("/api/obd", HTTP_GET, [](AsyncWebServerRequest *request) {
+    const ObdData& d = BLEObd.obdData();
+    char json[512];
+    snprintf(json, sizeof(json),
+      "{\"demo\":%s,\"connected\":%s,\"ready\":%s,"
+      "\"rpm\":%u,\"rpmValid\":%s,"
+      "\"speed\":%u,\"speedValid\":%s,"
+      "\"coolantTemp\":%d,\"coolantTempValid\":%s,"
+      "\"engineLoad\":%u,\"engineLoadValid\":%s,"
+      "\"intakeTemp\":%d,\"intakeTempValid\":%s,"
+      "\"throttlePos\":%u,\"throttlePosValid\":%s,"
+      "\"batteryVoltage\":%.1f,\"batteryVoltageValid\":%s,"
+      "\"fuelLevel\":%u,\"fuelLevelValid\":%s,"
+      "\"mafRate\":%u,\"mafRateValid\":%s,"
+      "\"timingAdvance\":%d,\"timingAdvanceValid\":%s}",
+      BLEObd.isDemoMode()?"true":"false",
+      BLEObd.isConnected()?"true":"false",
+      BLEObd.isReady()?"true":"false",
+      d.rpm, d.rpmValid?"true":"false",
+      d.speed, d.speedValid?"true":"false",
+      d.coolantTemp, d.coolantTempValid?"true":"false",
+      d.engineLoad, d.engineLoadValid?"true":"false",
+      d.intakeTemp, d.intakeTempValid?"true":"false",
+      d.throttlePos, d.throttlePosValid?"true":"false",
+      d.batteryVoltage, d.batteryVoltageValid?"true":"false",
+      d.fuelLevel, d.fuelLevelValid?"true":"false",
+      d.mafRate, d.mafRateValid?"true":"false",
+      d.timingAdvance, d.timingAdvanceValid?"true":"false"
+    );
+    AsyncWebServerResponse *resp = request->beginResponse(200, "application/json", json);
+    resp->addHeader("Access-Control-Allow-Origin", "*");
+    resp->addHeader("Cache-Control", "no-cache");
+    request->send(resp);
+  });
+
+  // ── OBD real-time dashboard page ──────────────────────────────────
+  server.on("/obd", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/html", webObdDashboardPage());
+  });
+
   // Start web server
   server.begin();
 }
@@ -690,6 +732,7 @@ static const String webRadioPage()
 "<P ALIGN='CENTER'>"
   "<A HREF='/memory'>Memory</A>&nbsp;|&nbsp;<A HREF='/config'>Config</A>"
   "&nbsp;|&nbsp;<A HREF='/update'>Update</A>"
+  "&nbsp;|&nbsp;<A HREF='/obd'>OBD</A>"
 "</P>"
 "<TABLE COLUMNS=2>"
 "<TR>"
@@ -754,6 +797,7 @@ static const String webMemoryPage()
 "<P ALIGN='CENTER'>"
   "<A HREF='/'>Status</A>&nbsp;|&nbsp;<A HREF='/config'>Config</A>"
   "&nbsp;|&nbsp;<A HREF='/update'>Update</A>"
+  "&nbsp;|&nbsp;<A HREF='/obd'>OBD</A>"
 "</P>"
 "<TABLE COLUMNS=2>" + items + "</TABLE>"
 );
@@ -777,6 +821,7 @@ const String webConfigPage()
   "<A HREF='/'>Status</A>"
   "&nbsp;|&nbsp;<A HREF='/memory'>Memory</A>"
   "&nbsp;|&nbsp;<A HREF='/update'>Update</A>"
+  "&nbsp;|&nbsp;<A HREF='/obd'>OBD</A>"
 "</P>"
 "<FORM ACTION='/setconfig' METHOD='POST'>"
   "<TABLE COLUMNS=2>"
@@ -863,6 +908,7 @@ static const String webUpdatePage()
 "<H1>Firmware Update</H1>"
 "<P ALIGN='CENTER'>"
   "<A HREF='/'>Status</A>&nbsp;|&nbsp;<A HREF='/config'>Config</A>"
+  "&nbsp;|&nbsp;<A HREF='/obd'>OBD</A>"
 "</P>"
 "<P>Select the firmware <CODE>.bin</CODE> file to upload.</P>"
 "<FORM METHOD='POST' ACTION='/update' ENCTYPE='multipart/form-data'>"
@@ -879,5 +925,63 @@ static const String webUpdatePage()
   "The device will reboot automatically after the update.<BR>"
   "Do <STRONG>not</STRONG> power off during the update."
 "</P>"
+);
+}
+
+static const String webObdDashboardPage()
+{
+  return webPage(
+"<H1>OBD Real-Time Dashboard</H1>"
+"<P ALIGN='CENTER'>"
+  "<A HREF='/'>Status</A>&nbsp;|&nbsp;<A HREF='/config'>Config</A>"
+  "&nbsp;|&nbsp;<A HREF='/update'>Update</A>"
+"</P>"
+"<P ID='status' ALIGN='CENTER'>Loading...</P>"
+"<TABLE BORDER=1 CELLPADDING=6 STYLE='margin:auto;'>"
+"<TR><TH>Parameter</TH><TH>Value</TH><TH>Status</TH></TR>"
+"<TR><TD>RPM</TD><TD ID='rpm' ALIGN='CENTER' STYLE='font-weight:bold;'>--</TD><TD ID='rpmS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"<TR><TD>Speed</TD><TD ID='speed' ALIGN='CENTER' STYLE='font-weight:bold;'>--</TD><TD ID='speedS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"<TR><TD>Coolant Temp</TD><TD ID='coolantTemp' ALIGN='CENTER'>--</TD><TD ID='coolantTempS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"<TR><TD>Engine Load</TD><TD ID='engineLoad' ALIGN='CENTER'>--</TD><TD ID='engineLoadS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"<TR><TD>Intake Temp</TD><TD ID='intakeTemp' ALIGN='CENTER'>--</TD><TD ID='intakeTempS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"<TR><TD>Throttle Position</TD><TD ID='throttlePos' ALIGN='CENTER'>--</TD><TD ID='throttlePosS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"<TR><TD>Battery Voltage</TD><TD ID='batteryVoltage' ALIGN='CENTER'>--</TD><TD ID='batteryVoltageS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"<TR><TD>Fuel Level</TD><TD ID='fuelLevel' ALIGN='CENTER'>--</TD><TD ID='fuelLevelS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"<TR><TD>MAF Rate</TD><TD ID='mafRate' ALIGN='CENTER'>--</TD><TD ID='mafRateS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"<TR><TD>Timing Advance</TD><TD ID='timingAdvance' ALIGN='CENTER'>--</TD><TD ID='timingAdvanceS' ALIGN='CENTER' STYLE='color:gray;'>--</TD></TR>"
+"</TABLE>"
+"<SCRIPT>"
+"(function(){"
+"var cols={valid:'green',invalid:'red'};"
+"function u(){"
+  "fetch('/api/obd').then(function(r){return r.json();}).then(function(d){"
+    "var st=d.demo?'DEMO MODE':d.ready?'Connected to ELM327':d.connected?'Initializing...':'Not active';"
+    "var el=document.getElementById('status');"
+    "el.innerHTML=st;"
+    "el.style.color=d.demo?'orange':d.ready?'green':'gray';"
+    "var f=function(id,v,s){"
+      "document.getElementById(id).textContent=v;"
+      "var se=document.getElementById(id+'S');"
+      "se.textContent=s?'OK':'--';"
+      "se.style.color=s?cols.valid:cols.invalid;"
+    "};"
+    "f('rpm',d.rpm+(d.demo?'*':''),d.rpmValid);"
+    "f('speed',d.speed+' km/h',d.speedValid);"
+    "f('coolantTemp',d.coolantTemp+' °C',d.coolantTempValid);"
+    "f('engineLoad',d.engineLoad+' %',d.engineLoadValid);"
+    "f('intakeTemp',d.intakeTemp+' °C',d.intakeTempValid);"
+    "f('throttlePos',d.throttlePos+' %',d.throttlePosValid);"
+    "f('batteryVoltage',d.batteryVoltage+' V',d.batteryVoltageValid);"
+    "f('fuelLevel',d.fuelLevel+' %',d.fuelLevelValid);"
+    "f('mafRate',d.mafRate+' g/s',d.mafRateValid);"
+    "f('timingAdvance',d.timingAdvance+' °',d.timingAdvanceValid);"
+  "}).catch(function(){"
+    "document.getElementById('status').textContent='Offline';"
+    "document.getElementById('status').style.color='red';"
+  "});"
+"}"
+"setInterval(u,500);u();"
+"})();"
+"</SCRIPT>"
 );
 }
