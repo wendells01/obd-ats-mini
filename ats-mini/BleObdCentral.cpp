@@ -377,6 +377,13 @@ void BleObdCentral::processResponse()
 
 void BleObdCentral::update()
 {
+
+  if(demoMode_ && !isConnected())
+  {
+    runDemoSimulation();
+    return;
+  }
+
   // Auto-reconnect on disconnect
   if (!isConnected() && isStarted())
   {
@@ -442,10 +449,10 @@ void BleObdCentral::update()
       pollNextPid();
     }
   }
+}
 
-  // Demo mode: driving simulation state machine
-  if(demoMode_ && !isConnected())
-  {
+void BleObdCentral::runDemoSimulation()
+{
     uint32_t now = millis();
     if(now - lastDemoUpdateMs_ > 100)
     {
@@ -576,7 +583,6 @@ void BleObdCentral::update()
         demoPhaseStartMs_ = now;
       }
     }
-  }
 }
 
 // ------------------------------------------------------------------

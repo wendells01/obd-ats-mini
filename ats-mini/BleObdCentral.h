@@ -109,6 +109,7 @@ private:
 
   void accumulateResponse(const char* data, size_t length);
   void processResponse();
+  void runDemoSimulation();
 
   void advanceInit();
   void sendNextCommand(const char* cmd);

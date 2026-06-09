@@ -77,6 +77,7 @@ int bleLoop(uint8_t bleMode)
   {
     BLEObd.loop();
     BLEObd.update();
+    if (BLEObd.isDemoMode()) return REMOTE_CHANGED;
     return BLEObd.isConnected() ? REMOTE_CHANGED : 0;
   }
 
