@@ -331,6 +331,7 @@ static void webInit()
   // Load OBD demo mode preference from NVS
   prefs.begin("network", true, STORAGE_PARTITION);
   obdDemoEnabled = prefs.getBool("obddemo", false);
+  obdShiftRpmLimit = prefs.getUShort("obdshiftrpm", SHIFT_RPM_LIMIT);
   prefs.end();
   BLEObd.enableDemoMode(obdDemoEnabled);
 
@@ -640,6 +641,16 @@ void webSetConfig(AsyncWebServerRequest *request)
   obdDemoEnabled = request->hasParam("obddemo", true) && request->getParam("obddemo", true)->value() == "1";
   prefs.putBool("obddemo", obdDemoEnabled);
   BLEObd.enableDemoMode(obdDemoEnabled);
+
+  // Save OBD shift RPM limit
+  {
+    String val = request->getParam("obdshiftrpm", true)->value();
+    uint16_t newLimit = (uint16_t)val.toInt();
+    if (newLimit >= 1000 && newLimit <= 12000) {
+      obdShiftRpmLimit = newLimit;
+      prefs.putUShort("obdshiftrpm", obdShiftRpmLimit);
+    }
+  }
 
   // Save OBD PID visibility toggles (persisted by Storage.cpp in "settings" namespace)
   static const struct { const char* name; uint8_t idx; } pidMap[] = {
@@ -973,6 +984,10 @@ const String webConfigPage()
     "<TD CLASS='LABEL'>OBD Demo Mode</TD>"
     "<TD><INPUT TYPE='CHECKBOX' NAME='obddemo' VALUE='1'" +
     (obdDemoEnabled? " CHECKED ":"") + "></TD>"
+  "</TR>"
+  "<TR>"
+    "<TD CLASS='LABEL'>Shift RPM</TD>"
+    "<TD><INPUT TYPE='NUMBER' NAME='obdshiftrpm' VALUE='" + String(obdShiftRpmLimit) + "' MIN='1000' MAX='12000' STEP='100' STYLE='width:80px'></TD>"
   "</TR>"
   "<TR><TH COLSPAN=2 CLASS='HEADING'>OBD T2 PID Visibility</TH></TR>"
   "<TR>"
