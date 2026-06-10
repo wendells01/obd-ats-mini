@@ -110,8 +110,8 @@ int rpmW = 300 * rpmVal / OBD_MAX_RPM;
   // COOL: x=202, y=46 | LOAD: x=264, y=46
   // VOLT: x=202, y=78 | FUEL: x=264, y=78
   auto drawDataBlock = [&](int x, int y, const char* label, const char* value, bool valid) {
-    spr.fillRoundRect(x, y, 58, 30, 3, LP_FRAME);
-    spr.fillRoundRect(x+2, y+2, 54, 26, 3, TFT_BLACK);
+    spr.fillRoundRect(x, y, 58, 32, 3, LP_FRAME);
+    spr.fillRoundRect(x+2, y+2, 54, 28, 3, TFT_BLACK);
     spr.setTextColor(TFT_WHITE);
     spr.setTextDatum(TC_DATUM);
     spr.drawString(label, x + 29, y + 3, 1);
@@ -163,11 +163,11 @@ int rpmW = 300 * rpmVal / OBD_MAX_RPM;
     }
   }
 
-  // ── SECTION 3: BOTTOM ROW (y=124 to y=152) ────────────
-  // 4 blocks 77w × 28h at x = 2, 81, 160, 239
+  // ── SECTION 3: BOTTOM ROW (y=124 to y=154) ────────────
+  // 4 blocks 77w × 30h at x = 2, 81, 160, 239
   auto drawBotBlock = [&](int x, const char* label, const char* value, bool valid) {
-    spr.fillRoundRect(x, 124, 77, 28, 3, LP_FRAME);
-    spr.fillRoundRect(x+2, 126, 73, 24, 3, TFT_BLACK);
+    spr.fillRoundRect(x, 124, 77, 30, 3, LP_FRAME);
+    spr.fillRoundRect(x+2, 126, 73, 26, 3, TFT_BLACK);
     spr.setTextColor(TFT_WHITE);
     spr.setTextDatum(TC_DATUM);
     spr.drawString(label, x + 38, 126, 1);
