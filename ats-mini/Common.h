@@ -199,6 +199,9 @@ extern uint8_t obdScreenIdx;          // 0 = T1 (tachometer+speed), 1 = T2 (data
 #define OBD_PID_COUNT 10
 extern bool obdPidEnabled[OBD_PID_COUNT];
 
+// Runtime OBD shift RPM threshold — configured via webUI, default SHIFT_RPM_LIMIT (6000)
+extern uint16_t obdShiftRpmLimit;
+
 extern int8_t agcIdx;
 extern int8_t agcNdx;
 extern int8_t softMuteMaxAttIdx;

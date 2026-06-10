@@ -7,6 +7,9 @@
 
 // Global OBD screen state
 uint8_t obdScreenIdx = 0;                                   // 0=T1 (tach), 1=T2 (data)
+
+// Runtime shift-RPM threshold — defaults to SHIFT_RPM_LIMIT, override via webUI
+uint16_t obdShiftRpmLimit = SHIFT_RPM_LIMIT;
 bool obdPidEnabled[OBD_PID_COUNT] = {
   true,   // 0: rpm
   true,   // 1: speed
@@ -41,6 +44,36 @@ static void drawObdShiftOverlay()
 }
 
 // ─────────────────────────────────────────────────────────
+// 8-dot shift-light row (fills left-to-right as RPM rises)
+// ─────────────────────────────────────────────────────────
+static void drawObdShiftLight(const ObdData& d)
+{
+  const uint16_t DIM = spr.color565(60, 60, 60);
+  const int numDots = 8;
+  const int spacing = 300 / 9;  // ≈33px between centers
+  const int y = 28;  // vertical center of frame (y=22 to y=34)
+  const int r = 4;   // dot radius
+
+  // Colors: 1-2 yellow, 3-4 green, 5-6 red, 7-8 blue
+  static const uint16_t dotColors[8] = {
+    TFT_YELLOW, TFT_YELLOW,
+    TFT_GREEN,  TFT_GREEN,
+    TFT_RED,    TFT_RED,
+    TFT_BLUE,   TFT_BLUE
+  };
+
+  for (int i = 0; i < numDots; i++) {
+    int x = 10 + (i + 1) * spacing;
+    uint16_t threshold = obdShiftRpmLimit * (i + 1) / numDots;
+    if (d.rpm >= threshold) {
+      spr.fillCircle(x, y, r, dotColors[i]);
+    } else {
+      spr.fillCircle(x, y, r, DIM);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────
 // T1 — Lopaka-Style Digital Dashboard (adapted from 240×240 → 320×170)
 // ─────────────────────────────────────────────────────────
 void drawObdScreenT1(const ObdData& d)
@@ -51,35 +84,13 @@ void drawObdScreenT1(const ObdData& d)
   static const uint16_t LP_RED   = spr.color565(242, 6, 6);      // 0xF206
   static const uint16_t GRAY     = spr.color565(120, 120, 120);
 
-  // ── SECTION 1: RPM BAR (y=19 to y=44) ──────────────────
+  // ── SECTION 1: SHIFT LIGHT (y=19 to y=44) ──────────────
   spr.fillRect(0, 19, 320, 151, LP_BG);
 
   // Outer frame
   spr.fillRoundRect(2, 19, 316, 25, 5, LP_FRAME);
-  // Inner track
-  spr.fillRect(10, 22, 300, 10, TFT_BLACK);
-  // RPM fill bar (proportional)
-  int rpmVal = d.rpm > OBD_MAX_RPM ? OBD_MAX_RPM : d.rpm;
-int rpmW = 300 * rpmVal / OBD_MAX_RPM;
-  if (rpmW > 0) spr.fillRect(10, 22, rpmW, 10, TFT_WHITE);
-
-  // Grid ticks (vertical lines at each RPM integer 0-8, 8 intervals)
-  const int spacing = 300 / 8;
-  for (int i = 0; i <= 8; i++) {
-    int x = 10 + i * spacing;
-    spr.drawFastVLine(x, 32, 3, LP_GRID);
-    // Number label below
-    char buf[4];
-    snprintf(buf, sizeof(buf), "%d", i);
-    spr.setTextDatum(TC_DATUM);
-    spr.setTextColor(i >= 8 ? LP_RED : TFT_WHITE);
-    spr.drawString(buf, x, 36, 1);
-  }
-  // "RPM x1000" label at right
-  spr.setTextColor(TFT_WHITE);
-  spr.setTextDatum(TR_DATUM);
-  spr.drawString("RPM x1000", 316, 36, 1);
-  spr.setTextDatum(TL_DATUM);
+  // 8-dot shift light row
+  drawObdShiftLight(d);
 
   // ── SECTION 2: SPEED (y=46 to y=121, left 180px) ──────
   spr.fillRoundRect(2, 46, 180, 75, 5, LP_FRAME);
@@ -88,7 +99,7 @@ int rpmW = 300 * rpmVal / OBD_MAX_RPM;
 
   // Speed value — Orbitron large
   spr.setFreeFont(&Orbitron_Light_24);
-  spr.setTextSize(2);
+  spr.setTextSize(3);
   spr.setTextDatum(TC_DATUM);
   if (d.speedValid) {
     char buf[8];
@@ -220,7 +231,7 @@ int rpmW = 300 * rpmVal / OBD_MAX_RPM;
   }
 
   // ── SECTION 4: SHIFT OVERLAY (preserved) ──────────────
-  if (d.rpm >= SHIFT_RPM_LIMIT)
+  if (d.rpm >= obdShiftRpmLimit)
     drawObdShiftOverlay();
 }
 
@@ -348,7 +359,7 @@ void drawObdScreenT2(const ObdData& d)
     switch (i) {
       case 0: // RPM
         label = "RPM"; valid = d.rpmValid;
-        status = (valid && d.rpm >= SHIFT_RPM_LIMIT) ? 2 : 0;
+        status = (valid && d.rpm >= obdShiftRpmLimit) ? 2 : 0;
         bpct = valid ? rpmPct(d.rpm) : 0;
         if (valid) { snprintf(fmtBuf, sizeof(fmtBuf), "%u", d.rpm); val = fmtBuf; }
         break;
@@ -451,7 +462,7 @@ void drawObdScreenT2(const ObdData& d)
   }
 
   // SHIFT overlay
-  if (d.rpm >= SHIFT_RPM_LIMIT)
+  if (d.rpm >= obdShiftRpmLimit)
     drawObdShiftOverlay();
 }
 
