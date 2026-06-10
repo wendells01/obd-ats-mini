@@ -21,7 +21,7 @@ bool obdPidEnabled[OBD_PID_COUNT] = {
 };
 
 // ─────────────────────────────────────────────────────────
-// Tachometer arc gauge (drawSmoothArc + fillTriangle needle)
+// Centered tachometer arc — BMW M3 G80 digital cluster style
 // ─────────────────────────────────────────────────────────
 static void drawObdGauge(int cx, int cy, int outerR, int innerR, uint16_t rpm)
 {
@@ -42,88 +42,63 @@ static void drawObdGauge(int cx, int cy, int outerR, int innerR, uint16_t rpm)
   spr.drawSmoothArc(cx, cy, outerR, innerR, 360, 405, TH.text_warn, TH.smeter_bar_empty);
 
   //
-  // Tick marks at every 1000 RPM
+  // Tick marks at every 500 RPM (major at 1000, minor at 500)
   //
-  for (unsigned int r = 0; r <= 7000; r += 1000)
+  for (unsigned int r = 0; r <= 8000; r += 500)
   {
     int  angle = 135 + (int)(r * 270u / OBD_MAX_RPM);
     float rad  = angle * (PI / 180.0f);
     float c    = cosf(rad);
     float s    = sinf(rad);
-    int x1 = cx + (int)((outerR - 8) * c);
-    int y1 = cy + (int)((outerR - 8) * s);
-    int x2 = cx + (int)((outerR - 1) * c);
-    int y2 = cy + (int)((outerR - 1) * s);
-    spr.drawLine(x1, y1, x2, y2, TH.text);
+
+    bool major = (r % 1000 == 0);
+    int  tLen  = major ? 10 : 5;
+    int  x1 = cx + (int)((outerR - tLen) * c);
+    int  y1 = cy + (int)((outerR - tLen) * s);
+    int  x2 = cx + (int)((outerR - 1) * c);
+    int  y2 = cy + (int)((outerR - 1) * s);
+    spr.drawLine(x1, y1, x2, y2, major ? TH.text : TH.text_muted);
+
+    // RPM label at major ticks (every 1000 RPM)
+    if (major)
+    {
+      int  lr  = outerR + 7;
+      int  lx  = cx + (int)(lr * c);
+      int  ly  = cy + (int)(lr * s);
+      char lbl[4];
+      snprintf(lbl, sizeof(lbl), "%u", r / 1000);
+      spr.setTextDatum(CC_DATUM);
+      spr.setTextColor(TH.text_muted);
+      spr.drawString(lbl, lx, ly, 1);
+    }
   }
 
   //
-  // SHIFT progression bars (top of gauge)
-  //
-  int numBars = 0;
-  if (rpm > 5000) numBars = 1;
-  if (rpm > 5300) numBars = 2;
-  if (rpm > 5600) numBars = 3;
-  if (rpm > 5900) numBars = 4;
-
-  const int barW = 8, barH = 5, barGap = 3;
-  int totalW     = 4 * barW + 3 * barGap;
-  int barY       = cy - outerR - 7;
-  int barStartX  = cx - totalW / 2;
-
-  for (int i = 0; i < 4; i++)
-  {
-    int bx       = barStartX + i * (barW + barGap);
-    uint16_t col = (i < numBars) ? TH.text_warn : TH.smeter_bar_empty;
-    spr.fillRect(bx, barY, barW, barH, col);
-  }
-
-  //
-  // Needle (fillTriangle)
+  // Needle — thin elegant line + small triangle tip
   //
   float ndlAngle = 135.0f + (rpm * 270.0f) / OBD_MAX_RPM;
   float rad_     = ndlAngle * (PI / 180.0f);
   float ndlC     = cosf(rad_);
   float ndlS     = sinf(rad_);
 
-  // Tip near outer arc edge
+  // Main needle line (thin, from center to near edge)
   int tipX = cx + (int)((outerR - 3) * ndlC);
   int tipY = cy + (int)((outerR - 3) * ndlS);
+  spr.drawLine(cx, cy, tipX, tipY, TH.freq_text);
 
-  // Base: extends from center along needle direction with width
-  int bCx = cx + (int)(10 * ndlC);
-  int bCy = cy + (int)(10 * ndlS);
-
+  // Small triangle at tip for precision
+  int  btR   = outerR - 12;
+  int  bX    = cx + (int)(btR * ndlC);
+  int  bY    = cy + (int)(btR * ndlS);
   float perpC = cosf(rad_ + PI / 2.0f);
   float perpS = sinf(rad_ + PI / 2.0f);
-  int bHalfW  = 5;
-
   spr.fillTriangle(tipX, tipY,
-                   bCx + (int)(bHalfW * perpC), bCy + (int)(bHalfW * perpS),
-                   bCx - (int)(bHalfW * perpC), bCy - (int)(bHalfW * perpS),
+                   bX + (int)(3 * perpC), bY + (int)(3 * perpS),
+                   bX - (int)(3 * perpC), bY - (int)(3 * perpS),
                    TH.freq_text);
-  // Pivot dot
-  spr.fillCircle(cx, cy, 4, TH.freq_text);
 
-  //
-  // Center RPM number (drawn last so it's always on top of needle)
-  //
-  spr.setFreeFont(&Orbitron_Light_24);
-  spr.setTextColor(TH.freq_text, TH.bg);
-  spr.setTextDatum(TC_DATUM);
-
-  char rpmStr[8];
-  snprintf(rpmStr, sizeof(rpmStr), "%u", rpm);
-
-  // Wide padding ensures needle base does not show through character gaps
-  spr.setTextPadding(spr.textWidth("8888", 4) + 6);
-  spr.drawString(rpmStr, cx, cy - 8, 4);
-  spr.setTextPadding(0);
-
-  spr.setFreeFont(NULL);
-  spr.setTextColor(TH.text_muted);
-  spr.setTextDatum(TC_DATUM);
-  spr.drawString("RPM", cx, cy + 20, 2);
+  // Small pivot dot
+  spr.fillCircle(cx, cy, 3, TH.freq_text);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -147,36 +122,51 @@ static void drawObdShiftOverlay()
 }
 
 // ─────────────────────────────────────────────────────────
-// T1 — BMW M3 G80 Digital Cluster (tachometer + speed)
+// T1 — BMW M3 G80 Digital Cluster (centered arc + speed inside)
 // ─────────────────────────────────────────────────────────
 void drawObdScreenT1(const ObdData& d)
 {
   const uint16_t GRAY = spr.color565(120, 120, 120);
 
-  // Large tachometer arc — centered left, full height
-  drawObdGauge(92, 96, 68, 52, d.rpm);
+  // Centered tachometer arc
+  drawObdGauge(160, 87, 70, 54, d.rpm);
 
-  // Speed display — right side, BMW M3 style
+  // Speed display — INSIDE the arc, centered
   {
-    spr.setFreeFont(&Orbitron_Light_24);
-    spr.setTextColor(d.speedValid ? TH.freq_text : GRAY);
-    spr.setTextDatum(TL_DATUM);
+    // Clear a circular area behind the readout so arc/needle don't show through
+    spr.fillCircle(160, 86, 36, TH.bg);
 
-    // Speed value — fixed 3-char width padding
-    char buf[8];
-    if (d.speedValid)
-      snprintf(buf, sizeof(buf), "%3d", d.speed);
-    else
-      snprintf(buf, sizeof(buf), "--");
-    spr.setTextPadding(spr.textWidth("888", 4));
-    spr.drawString(buf, 182, 55, 4);
-    spr.setTextPadding(0);
-    spr.setFreeFont(NULL);
+    // RPM number (small, above speed)
+    {
+      char rs[8];
+      snprintf(rs, sizeof(rs), "%u", d.rpm);
+      spr.setFreeFont(&Orbitron_Light_24);
+      spr.setTextColor(TH.text_muted, TH.bg);
+      spr.setTextDatum(TC_DATUM);
+      spr.drawString(rs, 160, 58);
+      spr.setFreeFont(NULL);
+    }
 
-    // km/h label
-    spr.setTextColor(TH.text_muted);
-    spr.setTextDatum(TL_DATUM);
-    spr.drawString("km/h", 182, 92, 2);
+    // Speed value (large, centered)
+    {
+      char buf[8];
+      if (d.speedValid)
+        snprintf(buf, sizeof(buf), "%3d", d.speed);
+      else
+        snprintf(buf, sizeof(buf), "--");
+      spr.setFreeFont(&Orbitron_Light_24);
+      spr.setTextSize(2);
+      spr.setTextColor(d.speedValid ? TH.freq_text : GRAY, TH.bg);
+      spr.setTextDatum(TC_DATUM);
+      spr.drawString(buf, 160, 88);
+      spr.setTextSize(1);
+      spr.setFreeFont(NULL);
+    }
+
+    // km/h label (below speed)
+    spr.setTextColor(TH.text_muted, TH.bg);
+    spr.setTextDatum(TC_DATUM);
+    spr.drawString("km/h", 160, 114, 1);
   }
 
   // SHIFT overlay

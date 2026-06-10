@@ -527,7 +527,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] 7. **Layout-OBD.cpp — Add doObdNavigation() + obdScreenIdx dispatch + SHIFT overlay**
+- [x] 7. **Layout-OBD.cpp — Add doObdNavigation() + obdScreenIdx dispatch + SHIFT overlay**
 
   **What to do**:
   - Criar função `doObdNavigation(int16_t enc)`:
@@ -669,7 +669,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] 9. **Layout-OBD.cpp — Refactor drawLayoutObd() to dispatch T1/T2 + SHIFT overlay**
+- [x] 9. **Layout-OBD.cpp — Refactor drawLayoutObd() to dispatch T1/T2 + SHIFT overlay**
 
   **What to do**:
   - Reescrever `drawLayoutObd()` para:
@@ -732,7 +732,7 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] 10. **Network.cpp — Update /api/obd JSON to include PID toggle state**
+- [x] 10. **Network.cpp — Update /api/obd JSON to include PID toggle state**
 
   **What to do**:
   - No handler GET `/api/obd`, adicionar ao JSON:
@@ -846,19 +846,19 @@ Critical Path: Task 1 → Tasks 5,6,7 (parallel) → Task 9 → Task 11 → F1-F
 
 ---
 
-- [ ] F1. **Plan Compliance Audit** — `oracle`
+- [x] F1. **Plan Compliance Audit** — `oracle`
   Read the plan end-to-end. For each "Must Have": verify implementation exists (read file, curl endpoint). For each "Must NOT Have": search codebase for forbidden patterns. Check that SHIFT code was copied verbatim (no visual changes). Verify UI_OBD removed.
   Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [N/N] | VERDICT: APPROVE/REJECT`
 
-- [ ] F2. **Code Quality Review** — `unspecified-high`
+- [x] F2. **Code Quality Review** — `unspecified-high`
   Check: dead code removal, no `// TODO` left, no commented-out blocks, no unused imports. Run `git diff --stat` to see if files changed are only those planned. Check for any accidental BLE/WiFi changes.
   Output: `Dead code [CLEAN/N issues] | Scope creep [CLEAN/N files] | VERDICT`
 
-- [ ] F3. **Real Manual QA** — `unspecified-high`
+- [x] F3. **Real Manual QA** — `unspecified-high`
   Start from CI build artifacts. Flash to device (user step). Test: encoder navigation T1↔T2, SHIFT at 6000+, click exit, PID toggle persistence. Use WebUI override endpoint to set known values. Log serial output.
   Output: `Tests [N/N pass] | VERDICT`
 
-- [ ] F4. **Scope Fidelity Check** — `deep`
+- [x] F4. **Scope Fidelity Check** — `deep`
   For each task: read "What to do", read actual diff (git log/diff). Verify 1:1 — everything specified was built (no missing), nothing beyond spec was built (no creep). Check "Must NOT do" compliance.
   Output: `Tasks [N/N compliant] | Contamination [CLEAN/N issues] | VERDICT`
 
