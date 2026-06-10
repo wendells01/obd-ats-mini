@@ -1,6 +1,8 @@
 #ifndef DRAW_H
 #define DRAW_H
 
+struct ObdData;  // forward decl from BleObdCentral.h
+
 // Display position control
 #define MENU_OFFSET_X    0    // Menu horizontal offset
 #define MENU_OFFSET_Y   18    // Menu vertical offset
