@@ -81,11 +81,10 @@ int rpmW = 300 * rpmVal / OBD_MAX_RPM;
   spr.drawString("RPM x1000", 316, 36, 1);
   spr.setTextDatum(TL_DATUM);
 
-  // ── SECTION 2: SPEED (y=46 to y=110, left 196px) ──────
-  // Outer frame
-  spr.fillRoundRect(2, 46, 196, 64, 5, LP_FRAME);
+  // ── SECTION 2: SPEED (y=46 to y=121, left 180px) ──────
+  spr.fillRoundRect(2, 46, 180, 75, 5, LP_FRAME);
   // Inner frame
-  spr.fillRoundRect(5, 49, 190, 58, 5, TFT_BLACK);
+  spr.fillRoundRect(5, 49, 174, 69, 5, TFT_BLACK);
 
   // Speed value — Orbitron large
   spr.setFreeFont(&Orbitron_Light_24);
@@ -95,18 +94,17 @@ int rpmW = 300 * rpmVal / OBD_MAX_RPM;
     char buf[8];
     snprintf(buf, sizeof(buf), "%3d", d.speed);
     spr.setTextColor(TFT_WHITE);
-    spr.drawString(buf, 100, 58);
+    spr.drawString(buf, 92, 52);
   } else {
     spr.setTextColor(GRAY);
-    spr.drawString("--", 100, 58);
+    spr.drawString("--", 92, 52);
   }
   spr.setTextSize(1);
   spr.setFreeFont(NULL);
 
-  // km/h label
   spr.setTextColor(TFT_WHITE);
   spr.setTextDatum(TC_DATUM);
-  spr.drawString("km/h", 100, 98, 1);
+  spr.drawString("km/h", 92, 105, 1);
 
   // ── SECTION 2b: 2×2 DATA GRID (right side, y=46 to y=110) ──
   // COOL: x=202, y=46 | LOAD: x=264, y=46
@@ -165,17 +163,17 @@ int rpmW = 300 * rpmVal / OBD_MAX_RPM;
     }
   }
 
-  // ── SECTION 3: BOTTOM ROW (y=112 to y=140) ────────────
+  // ── SECTION 3: BOTTOM ROW (y=124 to y=152) ────────────
   // 4 blocks 77w × 28h at x = 2, 81, 160, 239
   auto drawBotBlock = [&](int x, const char* label, const char* value, bool valid) {
-    spr.fillRoundRect(x, 112, 77, 28, 3, LP_FRAME);
-    spr.fillRoundRect(x+2, 114, 73, 24, 3, TFT_BLACK);
+    spr.fillRoundRect(x, 124, 77, 28, 3, LP_FRAME);
+    spr.fillRoundRect(x+2, 126, 73, 24, 3, TFT_BLACK);
     spr.setTextColor(TFT_WHITE);
     spr.setTextDatum(TC_DATUM);
-    spr.drawString(label, x + 38, 114, 1);
+    spr.drawString(label, x + 38, 126, 1);
     spr.setTextSize(2);
     spr.setTextColor(valid ? TFT_WHITE : GRAY);
-    spr.drawString(value, x + 38, 124, 2);
+    spr.drawString(value, x + 38, 136, 2);
     spr.setTextSize(1);
     spr.setTextDatum(TL_DATUM);
   };
