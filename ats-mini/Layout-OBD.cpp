@@ -51,8 +51,8 @@ static void drawObdShiftLight(const ObdData& d)
   const uint16_t DIM = spr.color565(60, 60, 60);
   const int numDots = 8;
   const int spacing = 300 / 9;  // ≈33px between centers
-  const int y = 28;  // vertical center of frame (y=22 to y=34)
-  const int r = 4;   // dot radius
+  const int y = 32;  // vertical center of inner frame area (y=22 to y=41)
+  const int r = 8;   // dot radius (~90% of available height)
 
   // Colors: 1-2 yellow, 3-4 green, 5-6 red, 7-8 blue
   static const uint16_t dotColors[8] = {
@@ -99,16 +99,16 @@ void drawObdScreenT1(const ObdData& d)
 
   // Speed value — Orbitron large
   spr.setFreeFont(&Orbitron_Light_24);
-  spr.setTextSize(3);
+  spr.setTextSize(2);
   spr.setTextDatum(TC_DATUM);
   if (d.speedValid) {
     char buf[8];
     snprintf(buf, sizeof(buf), "%3d", d.speed);
     spr.setTextColor(TFT_WHITE);
-    spr.drawString(buf, 92, 52);
+    spr.drawString(buf, 92, 58);
   } else {
     spr.setTextColor(GRAY);
-    spr.drawString("--", 92, 52);
+    spr.drawString("--", 92, 58);
   }
   spr.setTextSize(1);
   spr.setFreeFont(NULL);
@@ -125,10 +125,10 @@ void drawObdScreenT1(const ObdData& d)
     spr.fillRoundRect(x+2, y+2, 54, 28, 3, TFT_BLACK);
     spr.setTextColor(TFT_WHITE);
     spr.setTextDatum(TC_DATUM);
-    spr.drawString(label, x + 29, y + 3, 1);
+    spr.drawString(label, x + 29, y + 4, 1);
     spr.setTextSize(1);
     spr.setTextColor(valid ? TFT_WHITE : GRAY);
-    spr.drawString(value, x + 29, y + 17, 2);
+    spr.drawString(value, x + 29, y + 16, 2);
     spr.setTextSize(1);
     spr.setTextDatum(TL_DATUM);
   };
@@ -181,10 +181,10 @@ void drawObdScreenT1(const ObdData& d)
     spr.fillRoundRect(x+2, 126, 73, 26, 3, TFT_BLACK);
     spr.setTextColor(TFT_WHITE);
     spr.setTextDatum(TC_DATUM);
-    spr.drawString(label, x + 38, 126, 1);
+    spr.drawString(label, x + 38, 128, 1);
     spr.setTextSize(1);
     spr.setTextColor(valid ? TFT_WHITE : GRAY);
-    spr.drawString(value, x + 38, 139, 2);
+    spr.drawString(value, x + 38, 138, 2);
     spr.setTextSize(1);
     spr.setTextDatum(TL_DATUM);
   };
