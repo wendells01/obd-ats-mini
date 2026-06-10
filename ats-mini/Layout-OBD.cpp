@@ -21,87 +21,6 @@ bool obdPidEnabled[OBD_PID_COUNT] = {
 };
 
 // ─────────────────────────────────────────────────────────
-// Centered tachometer arc — BMW M3 G80 digital cluster style
-// ─────────────────────────────────────────────────────────
-static void drawObdGauge(int cx, int cy, int outerR, int innerR, uint16_t rpm)
-{
-  if (rpm > OBD_MAX_RPM) rpm = OBD_MAX_RPM;
-
-  //
-  // Arc track + colored zones
-  //
-  // TFT_eSPI angles: 0° = 3 o'clock, clockwise
-  // RPM → angle: 0→135° (bottom-left), 4000→270° (top), 8000→405°/45° (bottom-right)
-  // Green  135°–270° =  0–4000 RPM
-  // Yellow 270°–360° = 4000–6000 RPM
-  // Red    360°–405° = 6000–8000 RPM
-  //
-  spr.drawSmoothArc(cx, cy, outerR, innerR, 135, 405, TH.smeter_bar_empty, TH.bg);
-  spr.drawSmoothArc(cx, cy, outerR, innerR, 135, 270, TH.smeter_bar, TH.smeter_bar_empty);
-  spr.drawSmoothArc(cx, cy, outerR, innerR, 270, 360, TH.smeter_bar_plus, TH.smeter_bar_empty);
-  spr.drawSmoothArc(cx, cy, outerR, innerR, 360, 405, TH.text_warn, TH.smeter_bar_empty);
-
-  //
-  // Tick marks at every 500 RPM (major at 1000, minor at 500)
-  //
-  for (unsigned int r = 0; r <= 8000; r += 500)
-  {
-    int  angle = 135 + (int)(r * 270u / OBD_MAX_RPM);
-    float rad  = angle * (PI / 180.0f);
-    float c    = cosf(rad);
-    float s    = sinf(rad);
-
-    bool major = (r % 1000 == 0);
-    int  tLen  = major ? 10 : 5;
-    int  x1 = cx + (int)((outerR - tLen) * c);
-    int  y1 = cy + (int)((outerR - tLen) * s);
-    int  x2 = cx + (int)((outerR - 1) * c);
-    int  y2 = cy + (int)((outerR - 1) * s);
-    spr.drawLine(x1, y1, x2, y2, major ? TH.text : TH.text_muted);
-
-    // RPM label at major ticks (every 1000 RPM)
-    if (major)
-    {
-      int  lr  = outerR + 7;
-      int  lx  = cx + (int)(lr * c);
-      int  ly  = cy + (int)(lr * s);
-      char lbl[4];
-      snprintf(lbl, sizeof(lbl), "%u", r / 1000);
-      spr.setTextDatum(CC_DATUM);
-      spr.setTextColor(TH.text_muted);
-      spr.drawString(lbl, lx, ly, 1);
-    }
-  }
-
-  //
-  // Needle — thin elegant line + small triangle tip
-  //
-  float ndlAngle = 135.0f + (rpm * 270.0f) / OBD_MAX_RPM;
-  float rad_     = ndlAngle * (PI / 180.0f);
-  float ndlC     = cosf(rad_);
-  float ndlS     = sinf(rad_);
-
-  // Main needle line (thin, from center to near edge)
-  int tipX = cx + (int)((outerR - 3) * ndlC);
-  int tipY = cy + (int)((outerR - 3) * ndlS);
-  spr.drawLine(cx, cy, tipX, tipY, TH.freq_text);
-
-  // Small triangle at tip for precision
-  int  btR   = outerR - 12;
-  int  bX    = cx + (int)(btR * ndlC);
-  int  bY    = cy + (int)(btR * ndlS);
-  float perpC = cosf(rad_ + PI / 2.0f);
-  float perpS = sinf(rad_ + PI / 2.0f);
-  spr.fillTriangle(tipX, tipY,
-                   bX + (int)(3 * perpC), bY + (int)(3 * perpS),
-                   bX - (int)(3 * perpC), bY - (int)(3 * perpS),
-                   TH.freq_text);
-
-  // Small pivot dot
-  spr.fillCircle(cx, cy, 3, TH.freq_text);
-}
-
-// ─────────────────────────────────────────────────────────
 // SHIFT! overlay — full-screen, FuelTech-style
 // ─────────────────────────────────────────────────────────
 static void drawObdShiftOverlay()
@@ -122,54 +41,187 @@ static void drawObdShiftOverlay()
 }
 
 // ─────────────────────────────────────────────────────────
-// T1 — BMW M3 G80 Digital Cluster (centered arc + speed inside)
+// T1 — Lopaka-Style Digital Dashboard (adapted from 240×240 → 320×170)
 // ─────────────────────────────────────────────────────────
 void drawObdScreenT1(const ObdData& d)
 {
-  const uint16_t GRAY = spr.color565(120, 120, 120);
+  static const uint16_t LP_BG    = spr.color565(115, 117, 115);  // 0x73AE
+  static const uint16_t LP_FRAME = spr.color565(58, 150, 96);    // 0x3A96
+  static const uint16_t LP_GRID  = spr.color565(36, 190, 80);    // 0x24BE
+  static const uint16_t LP_RED   = spr.color565(242, 6, 6);      // 0xF206
+  static const uint16_t GRAY     = spr.color565(120, 120, 120);
 
-  // Centered tachometer arc
-  drawObdGauge(160, 87, 70, 54, d.rpm);
+  // ── SECTION 1: RPM BAR (y=19 to y=44) ──────────────────
+  spr.fillRect(0, 19, 320, 151, LP_BG);
 
-  // Speed display — INSIDE the arc, centered
-  {
-    // Clear a circular area behind the readout so arc/needle don't show through
-    spr.fillCircle(160, 86, 36, TH.bg);
+  // Outer frame
+  spr.fillRoundRect(2, 19, 316, 25, 5, LP_FRAME);
+  // Inner track
+  spr.fillRect(10, 22, 300, 10, TFT_BLACK);
+  // RPM fill bar (proportional)
+  int rpmVal = d.rpm > OBD_MAX_RPM ? OBD_MAX_RPM : d.rpm;
+int rpmW = 300 * rpmVal / OBD_MAX_RPM;
+  if (rpmW > 0) spr.fillRect(10, 22, rpmW, 10, TFT_WHITE);
 
-    // RPM number (small, above speed)
-    {
-      char rs[8];
-      snprintf(rs, sizeof(rs), "%u", d.rpm);
-      spr.setFreeFont(&Orbitron_Light_24);
-      spr.setTextColor(TH.text_muted, TH.bg);
-      spr.setTextDatum(TC_DATUM);
-      spr.drawString(rs, 160, 58);
-      spr.setFreeFont(NULL);
-    }
-
-    // Speed value (large, centered)
-    {
-      char buf[8];
-      if (d.speedValid)
-        snprintf(buf, sizeof(buf), "%3d", d.speed);
-      else
-        snprintf(buf, sizeof(buf), "--");
-      spr.setFreeFont(&Orbitron_Light_24);
-      spr.setTextSize(2);
-      spr.setTextColor(d.speedValid ? TH.freq_text : GRAY, TH.bg);
-      spr.setTextDatum(TC_DATUM);
-      spr.drawString(buf, 160, 88);
-      spr.setTextSize(1);
-      spr.setFreeFont(NULL);
-    }
-
-    // km/h label (below speed)
-    spr.setTextColor(TH.text_muted, TH.bg);
+  // Grid ticks (vertical lines at each RPM integer 0-8, 8 intervals)
+  const int spacing = 300 / 8;
+  for (int i = 0; i <= 8; i++) {
+    int x = 10 + i * spacing;
+    spr.drawFastVLine(x, 32, 3, LP_GRID);
+    // Number label below
+    char buf[4];
+    snprintf(buf, sizeof(buf), "%d", i);
     spr.setTextDatum(TC_DATUM);
-    spr.drawString("km/h", 160, 114, 1);
+    spr.setTextColor(i >= 8 ? LP_RED : TFT_WHITE);
+    spr.drawString(buf, x, 36, 1);
+  }
+  // "RPM x1000" label at right
+  spr.setTextColor(TFT_WHITE);
+  spr.setTextDatum(TR_DATUM);
+  spr.drawString("RPM x1000", 316, 36, 1);
+  spr.setTextDatum(TL_DATUM);
+
+  // ── SECTION 2: SPEED (y=46 to y=110, left 196px) ──────
+  // Outer frame
+  spr.fillRoundRect(2, 46, 196, 64, 5, LP_FRAME);
+  // Inner frame
+  spr.fillRoundRect(5, 49, 190, 58, 5, TFT_BLACK);
+
+  // Speed value — Orbitron large
+  spr.setFreeFont(&Orbitron_Light_24);
+  spr.setTextSize(2);
+  spr.setTextDatum(TC_DATUM);
+  if (d.speedValid) {
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%3d", d.speed);
+    spr.setTextColor(TFT_WHITE);
+    spr.drawString(buf, 100, 58);
+  } else {
+    spr.setTextColor(GRAY);
+    spr.drawString("--", 100, 58);
+  }
+  spr.setTextSize(1);
+  spr.setFreeFont(NULL);
+
+  // km/h label
+  spr.setTextColor(TFT_WHITE);
+  spr.setTextDatum(TC_DATUM);
+  spr.drawString("km/h", 100, 98, 1);
+
+  // ── SECTION 2b: 2×2 DATA GRID (right side, y=46 to y=110) ──
+  // COOL: x=202, y=46 | LOAD: x=264, y=46
+  // VOLT: x=202, y=78 | FUEL: x=264, y=78
+  auto drawDataBlock = [&](int x, int y, const char* label, const char* value, bool valid) {
+    spr.fillRoundRect(x, y, 58, 30, 3, LP_FRAME);
+    spr.fillRoundRect(x+2, y+2, 54, 26, 3, TFT_BLACK);
+    spr.setTextColor(TFT_WHITE);
+    spr.setTextDatum(TC_DATUM);
+    spr.drawString(label, x + 29, y + 3, 1);
+    spr.setTextSize(2);
+    spr.setTextColor(valid ? TFT_WHITE : GRAY);
+    spr.drawString(value, x + 29, y + 14, 2);
+    spr.setTextSize(1);
+    spr.setTextDatum(TL_DATUM);
+  };
+
+  // COOL
+  {
+    char buf[8];
+    if (d.coolantTempValid) {
+      snprintf(buf, sizeof(buf), "%d C", d.coolantTemp);
+      drawDataBlock(202, 46, "COOL", buf, true);
+    } else {
+      drawDataBlock(202, 46, "COOL", "--", false);
+    }
+  }
+  // LOAD
+  {
+    char buf[8];
+    if (d.engineLoadValid) {
+      snprintf(buf, sizeof(buf), "%u %%", d.engineLoad);
+      drawDataBlock(264, 46, "LOAD", buf, true);
+    } else {
+      drawDataBlock(264, 46, "LOAD", "--", false);
+    }
+  }
+  // VOLT
+  {
+    char buf[8];
+    if (d.batteryVoltageValid) {
+      snprintf(buf, sizeof(buf), "%.1fV", d.batteryVoltage);
+      drawDataBlock(202, 78, "VOLT", buf, true);
+    } else {
+      drawDataBlock(202, 78, "VOLT", "--", false);
+    }
+  }
+  // FUEL
+  {
+    char buf[8];
+    if (d.fuelLevelValid) {
+      snprintf(buf, sizeof(buf), "%u %%", d.fuelLevel);
+      drawDataBlock(264, 78, "FUEL", buf, true);
+    } else {
+      drawDataBlock(264, 78, "FUEL", "--", false);
+    }
   }
 
-  // SHIFT overlay
+  // ── SECTION 3: BOTTOM ROW (y=112 to y=140) ────────────
+  // 4 blocks 77w × 28h at x = 2, 81, 160, 239
+  auto drawBotBlock = [&](int x, const char* label, const char* value, bool valid) {
+    spr.fillRoundRect(x, 112, 77, 28, 3, LP_FRAME);
+    spr.fillRoundRect(x+2, 114, 73, 24, 3, TFT_BLACK);
+    spr.setTextColor(TFT_WHITE);
+    spr.setTextDatum(TC_DATUM);
+    spr.drawString(label, x + 38, 114, 1);
+    spr.setTextSize(2);
+    spr.setTextColor(valid ? TFT_WHITE : GRAY);
+    spr.drawString(value, x + 38, 124, 2);
+    spr.setTextSize(1);
+    spr.setTextDatum(TL_DATUM);
+  };
+
+  // IAT
+  {
+    char buf[8];
+    if (d.intakeTempValid) {
+      snprintf(buf, sizeof(buf), "%d C", d.intakeTemp);
+      drawBotBlock(2, "IAT", buf, true);
+    } else {
+      drawBotBlock(2, "IAT", "--", false);
+    }
+  }
+  // THR
+  {
+    char buf[8];
+    if (d.throttlePosValid) {
+      snprintf(buf, sizeof(buf), "%u %%", d.throttlePos);
+      drawBotBlock(81, "THR", buf, true);
+    } else {
+      drawBotBlock(81, "THR", "--", false);
+    }
+  }
+  // MAF
+  {
+    char buf[8];
+    if (d.mafRateValid) {
+      snprintf(buf, sizeof(buf), "%.1f", d.mafRate / 100.0f);
+      drawBotBlock(160, "MAF", buf, true);
+    } else {
+      drawBotBlock(160, "MAF", "--", false);
+    }
+  }
+  // TIM
+  {
+    char buf[8];
+    if (d.timingAdvanceValid) {
+      snprintf(buf, sizeof(buf), "%d deg", d.timingAdvance);
+      drawBotBlock(239, "TIM", buf, true);
+    } else {
+      drawBotBlock(239, "TIM", "--", false);
+    }
+  }
+
+  // ── SECTION 4: SHIFT OVERLAY (preserved) ──────────────
   if (d.rpm >= SHIFT_RPM_LIMIT)
     drawObdShiftOverlay();
 }
