@@ -99,23 +99,23 @@ void drawObdScreenT1(const ObdData& d)
 
   // Speed value — Orbitron large
   spr.setFreeFont(&Orbitron_Light_24);
-  spr.setTextSize(2);
+  spr.setTextSize(3);       // ~50% bigger than previous textSize=2
   spr.setTextDatum(TC_DATUM);
   if (d.speedValid) {
     char buf[8];
     snprintf(buf, sizeof(buf), "%3d", d.speed);
     spr.setTextColor(TFT_WHITE);
-    spr.drawString(buf, 92, 58);
+    spr.drawString(buf, 92, 68);   // centre higher so visible 49→99 fills box
   } else {
     spr.setTextColor(GRAY);
-    spr.drawString("--", 92, 58);
+    spr.drawString("--", 92, 68);
   }
   spr.setTextSize(1);
   spr.setFreeFont(NULL);
 
   spr.setTextColor(TFT_WHITE);
   spr.setTextDatum(TC_DATUM);
-  spr.drawString("km/h", 92, 105, 1);
+  spr.drawString("km/h", 92, 110, 1);  // moved down to avoid speed overlap
 
   // ── SECTION 2b: 2×2 DATA GRID (right side, y=46 to y=110) ──
   // COOL: x=202, y=46 | LOAD: x=264, y=46
@@ -128,7 +128,7 @@ void drawObdScreenT1(const ObdData& d)
     spr.drawString(label, x + 29, y + 4, 1);
     spr.setTextSize(1);
     spr.setTextColor(valid ? TFT_WHITE : GRAY);
-    spr.drawString(value, x + 29, y + 16, 2);
+    spr.drawString(value, x + 29, y + 15, 2);
     spr.setTextSize(1);
     spr.setTextDatum(TL_DATUM);
   };
@@ -184,7 +184,7 @@ void drawObdScreenT1(const ObdData& d)
     spr.drawString(label, x + 38, 128, 1);
     spr.setTextSize(1);
     spr.setTextColor(valid ? TFT_WHITE : GRAY);
-    spr.drawString(value, x + 38, 138, 2);
+    spr.drawString(value, x + 38, 137, 2);
     spr.setTextSize(1);
     spr.setTextDatum(TL_DATUM);
   };
