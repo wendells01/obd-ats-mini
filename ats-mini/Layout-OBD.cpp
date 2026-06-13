@@ -105,16 +105,16 @@ void drawObdScreenT1(const ObdData& d)
     char buf[8];
     snprintf(buf, sizeof(buf), "%3d", d.speed);
     spr.setTextColor(TFT_WHITE);
-    spr.drawString(buf, 12, 48);
+    spr.drawString(buf, 18, 42);
   } else {
     spr.setTextColor(GRAY);
-    spr.drawString("--", 12, 48);
+    spr.drawString("--", 18, 42);
   }
   spr.setTextSize(1);
   spr.setFreeFont(NULL);
   spr.setTextColor(TFT_WHITE);
   spr.setTextDatum(TC_DATUM);
-  spr.drawString("km/h", 80, 110, 1);
+  spr.drawString("km/h", 90, 110, 1);
 
   // ── SECTION 2b: 2×2 DATA GRID (right side, y=46 to y=110) ──
   // COOL: x=202, y=46 | LOAD: x=264, y=46
