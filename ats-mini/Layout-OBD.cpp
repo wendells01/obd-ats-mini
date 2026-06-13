@@ -100,22 +100,22 @@ void drawObdScreenT1(const ObdData& d)
   // Speed value — Orbitron large, top-anchored at inner-box top
   spr.setFreeFont(&Orbitron_Light_24);
   spr.setTextSize(3);
-  spr.setTextDatum(TC_DATUM);
+  spr.setTextDatum(MC_DATUM);
   if (d.speedValid) {
     char buf[8];
     snprintf(buf, sizeof(buf), "%3d", d.speed);
     spr.setTextColor(TFT_WHITE);
-    spr.drawString(buf, 92, 80);
+    spr.drawString(buf, 80, 83);
   } else {
     spr.setTextColor(GRAY);
-    spr.drawString("--", 92, 80);
+    spr.drawString("--", 80, 83);
   }
   spr.setTextSize(1);
   spr.setFreeFont(NULL);
 
   spr.setTextColor(TFT_WHITE);
   spr.setTextDatum(TC_DATUM);
-  spr.drawString("km/h", 92, 110, 1);
+  spr.drawString("km/h", 80, 110, 1);
 
   // ── SECTION 2b: 2×2 DATA GRID (right side, y=46 to y=110) ──
   // COOL: x=202, y=46 | LOAD: x=264, y=46
