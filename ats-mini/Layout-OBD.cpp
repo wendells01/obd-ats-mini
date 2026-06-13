@@ -31,7 +31,7 @@ static void drawObdShiftOverlay()
   spr.fillRect(0, 19, 320, 151, TFT_YELLOW);
   spr.drawRect(0, 19, 320, 151, TFT_RED);
   spr.setFreeFont(&Orbitron_Light_24);
-  spr.setTextSize(2);
+  spr.setTextSize(3);
   spr.setTextDatum(CC_DATUM);
   if ((millis() / 100) & 1) {
     spr.setTextColor(TFT_RED);
@@ -99,16 +99,16 @@ void drawObdScreenT1(const ObdData& d)
 
   // Speed value — left-aligned, inline km/h on the right
   spr.setFreeFont(&Orbitron_Light_24);
-  spr.setTextSize(2);
+  spr.setTextSize(3);
   spr.setTextDatum(TL_DATUM);
   if (d.speedValid) {
     char buf[8];
     snprintf(buf, sizeof(buf), "%3d", d.speed);
     spr.setTextColor(TFT_WHITE);
-    spr.drawString(buf, 18, 38);
+    spr.drawString(buf, 18, 42);
   } else {
     spr.setTextColor(GRAY);
-    spr.drawString("--", 18, 38);
+    spr.drawString("--", 18, 42);
   }
   spr.setTextSize(1);
   spr.setFreeFont(NULL);
