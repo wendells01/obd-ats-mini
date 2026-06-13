@@ -105,10 +105,10 @@ void drawObdScreenT1(const ObdData& d)
     char buf[8];
     snprintf(buf, sizeof(buf), "%3d", d.speed);
     spr.setTextColor(TFT_WHITE);
-    spr.drawString(buf, 18, 40);
+    spr.drawString(buf, 18, 36);
   } else {
     spr.setTextColor(GRAY);
-    spr.drawString("--", 18, 40);
+    spr.drawString("--", 18, 36);
   }
   spr.setTextSize(1);
   spr.setFreeFont(NULL);
