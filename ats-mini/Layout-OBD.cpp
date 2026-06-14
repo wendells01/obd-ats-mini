@@ -137,9 +137,9 @@ void drawObdScreenT1(const ObdData& d)
     char buf[8];
     if (d.coolantTempValid) {
       snprintf(buf, sizeof(buf), "%d C", d.coolantTemp);
-      drawDataBlock(202, 46, "COOL", buf, true);
+      drawDataBlock(195, 46, "COOL", buf, true);
     } else {
-      drawDataBlock(202, 46, "COOL", "--", false);
+      drawDataBlock(195, 46, "COOL", "--", false);
     }
   }
   // LOAD
@@ -147,9 +147,9 @@ void drawObdScreenT1(const ObdData& d)
     char buf[8];
     if (d.engineLoadValid) {
       snprintf(buf, sizeof(buf), "%u %%", d.engineLoad);
-      drawDataBlock(264, 46, "LOAD", buf, true);
+      drawDataBlock(257, 46, "LOAD", buf, true);
     } else {
-      drawDataBlock(264, 46, "LOAD", "--", false);
+      drawDataBlock(257, 46, "LOAD", "--", false);
     }
   }
   // VOLT
@@ -157,9 +157,9 @@ void drawObdScreenT1(const ObdData& d)
     char buf[8];
     if (d.batteryVoltageValid) {
       snprintf(buf, sizeof(buf), "%.1fV", d.batteryVoltage);
-      drawDataBlock(202, 78, "VOLT", buf, true);
+      drawDataBlock(195, 78, "VOLT", buf, true);
     } else {
-      drawDataBlock(202, 78, "VOLT", "--", false);
+      drawDataBlock(195, 78, "VOLT", "--", false);
     }
   }
   // FUEL
@@ -167,9 +167,9 @@ void drawObdScreenT1(const ObdData& d)
     char buf[8];
     if (d.fuelLevelValid) {
       snprintf(buf, sizeof(buf), "%u %%", d.fuelLevel);
-      drawDataBlock(264, 78, "FUEL", buf, true);
+      drawDataBlock(257, 78, "FUEL", buf, true);
     } else {
-      drawDataBlock(264, 78, "FUEL", "--", false);
+      drawDataBlock(257, 78, "FUEL", "--", false);
     }
   }
 
